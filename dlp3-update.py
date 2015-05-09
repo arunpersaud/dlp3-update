@@ -75,6 +75,7 @@ if commands['<package>']:
     packages = commands['<package>']
 else:
     packages = glob.glob(os.path.join(dlp3_path, "python3*"))
+    packages = [os.path.basename(p) for p in packages]
 
 logs = dict()
 with open(logfile, 'r') as f:
