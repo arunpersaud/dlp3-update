@@ -237,7 +237,9 @@ class myCMD(cmd.Cmd):
             output = output.decode('ascii')
             print(output)
             print("---------------------------------")
-
+            for line in output.split('\n'):
+                if line.startswith("created request id"):
+                    worked.append(p)
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
