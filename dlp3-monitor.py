@@ -177,7 +177,7 @@ class myCMD(cmd.Cmd):
 
         print("{:<{length}}    {:2}  {:2}   {:2}".
               format(p, good,
-                     colored(bad, 'red') if bad >0 else bad,
+                     " "+colored(bad, 'red') if bad >0 else bad,
                      building,
                      length=self.longestname))
 
