@@ -29,6 +29,24 @@ the git repo should be stored.
 A simple config file that stores the path information. You can also
 define a list of packages that should be skipped during update checks.
 
+* Workflow
+  My standard workflow is to:
+  1) run dlp3-update check
+  2) run dlp3-update update <list of packages>
+  3) start dlp3-monitor in a second terminal
+  4) go into a newly created branch
+     - check osc status
+     - call osc vc, add changelog. Use link
+       provided by dlp3-update or find changelog
+       and add link via 'dlp3-update addlog'
+     - edit spec file if needed
+     - check in using 'osc ci -n'
+  5) add package to monitor
+  6) repeat step 4 and 5
+  7) run 'status' in monitor
+  8) when enough packages finished building successfully, run
+     'submit' in monitor and then 'cleanup'
+
 * Installation
 
 Adjust the config file, so that it has the correct path information.
@@ -45,3 +63,4 @@ config file to ~/.config/dlp3-update/
     if there is a newer version available then the one you are already
     working on
   - open changelogs automatically in your browser
+  - adding a program to the monitor should do 'osc ci -n'
