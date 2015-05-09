@@ -102,6 +102,24 @@ class myCMD(cmd.Cmd):
             else:
                 print("can't find ", p)
 
+    def complete_add(self, text, line, begidx, endidx):
+        """autocomplete package names
+
+        readline likes to split things up when it hits a '-'
+        so we need to check the last word on the line and
+        since 'text' could just be the text after a '-'.
+        """
+        lastword = line.split()[-1]
+        if len(text) > 0:
+            lastword = lastword[:-len(text)]
+        # skip the beginning if we already have it on the line
+        l = len(lastword)
+        packages = [p[l:] for p in os.listdir(myCMD.dir)
+                    if os.path.isdir(os.path.join(dlp3_branch_path, p))
+                    and p != ".osc"
+                    and p.startswith(lastword+text)]
+        return packages
+
     def do_cleanup(self, arg):
         output = subprocess.check_output(['osc', 'list', os.path.basename(myCMD.dir)])
         existing = output.decode('ascii').split('\n')
