@@ -1,0 +1,13 @@
+# please edit all <...> in 'dlp3' and 'branch'
+
+
+[DEFAULT]
+# path for a clone of dlp3
+dlp3 = /home/<user>/src/OBS/devel:languages:python3
+
+# path where all branches of dlp3 package will go. e.g.
+# your home:<username>:branches:devel:langauges:python3 path
+branch = /home/<user>/src/OBS/home:<obsuser>:branches:devel:languages:python3
+
+# komma separated list of packages that will be skip
+#skip = python3-Attest, python3-irc, python3-louis
