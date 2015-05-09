@@ -175,7 +175,7 @@ class myCMD(cmd.Cmd):
             else:
                 print(colored("unknown status", 'red'), status)
 
-        print("{:<{length}}    {:2}  {:2}   {:2x}".
+        print("{:<{length}}    {:2}  {:2}   {:2}".
               format(p, good,
                      colored(bad, 'red') if bad >0 else bad,
                      building,
