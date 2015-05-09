@@ -56,7 +56,7 @@ example your ~/bin directory. In this case you should also link the
 config file to ~/.config/dlp3-update/
 
 
-* TODO
+* TO-DO
   - The monitor program could check every 5 seconds automatically
   - Handle packages that don't build correctly better, e.g. also check
     for updates for packages in your home-branch, but only list them
