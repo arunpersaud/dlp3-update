@@ -198,11 +198,12 @@ class myCMD(cmd.Cmd):
         tocheck = self.good_packages + self.bad_packages + self.packages
         self.good_packages = []
         self.bad_packages = []
-        self.longestname = max([len(p) for p in tocheck])
+        self.longestname = max([len(p) for p in tocheck]) if len(tocheck) >0 else 0
 
         # parallel check
-        print("{:^{length}} good bad building".
-              format("name", length=self.longestname+2))
+        if self.longestname > 0:
+            print("{:^{length}} good bad building".
+                  format("name", length=self.longestname+2))
         fut = [pool.submit(self.check_package, p) for p in tocheck]
         concurrent.futures.wait(fut)
         if self.bad or self.good or self.building:
