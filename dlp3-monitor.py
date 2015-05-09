@@ -103,10 +103,13 @@ class myCMD(cmd.Cmd):
         existing = output.decode('ascii').split('\n')
 
         packages = os.listdir(myCMD.dir)
-        packages = [p for p in packages if os.path.isdir(p) and p != ".osc" and p not in existing]
+        packages = [p for p in packages
+                    if os.path.isdir(os.path.join(dlp3_branch_path, p))
+                    and p != ".osc"
+                    and p not in existing]
 
         for p in packages:
-            print("rm -rf", p)
+            print("rm -rf", os.path.join(dlp3_branch_path, p))
         if len(packages) == 0:
             print("Nothing to clean up")
 
