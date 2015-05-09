@@ -82,6 +82,10 @@ class myCMD(cmd.Cmd):
         print("Good Bye!")
         return True
 
+    def do_bye(self, arg):
+        print("Good Bye!")
+        return True
+
     def do_add(self, arg):
         if arg == "all":
             packages = os.listdir(myCMD.dir)
