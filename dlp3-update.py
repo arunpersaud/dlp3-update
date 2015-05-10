@@ -93,7 +93,7 @@ if commands['addlog']:
     u = commands['<url>']
     logs[p] = u
     with open(logfile, 'w') as f:
-        json.dump(logs, f, indent=4)
+        json.dump(logs, f, indent=4, sort_keys=True)
     print("Added log file for {}.".format(p))
     sys.exit(0)
 
