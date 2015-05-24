@@ -121,8 +121,13 @@ class myCMD(cmd.Cmd):
         return packages
 
     def do_cleanup(self, arg):
-        output = subprocess.check_output(['osc', 'list', os.path.basename(myCMD.dir)])
-        existing = output.decode('ascii').split('\n')
+        try:
+            output = subprocess.check_output(['osc', 'list', os.path.basename(myCMD.dir)])
+            existing = output.decode('ascii').split('\n')
+        except:
+            # if no packages the home-branch on osc than the command will fail
+            # in this case we can remove all
+            existing = []
 
         packages = os.listdir(myCMD.dir)
         packages = [p for p in packages
