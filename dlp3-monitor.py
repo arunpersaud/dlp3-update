@@ -89,7 +89,7 @@ class myCMD(cmd.Cmd):
     def do_add(self, arg):
         if arg == "all":
             packages = os.listdir(myCMD.dir)
-            packages = [p for p in packages if os.path.isdir(p) and p != ".osc"]
+            packages = [p for p in packages if os.path.isdir(os.path.join(myCMD.dir, p)) and p != ".osc"]
         else:
             packages = arg.split()
         for p in packages:
@@ -241,10 +241,10 @@ class myCMD(cmd.Cmd):
             for line in output.split('\n'):
                 if line.startswith("created request id"):
                     worked.append(p)
-                    output = subprocess.check_output('cd {} && osc up"'.
+                    print("updating dlp3 checkout for", p)
+                    output = subprocess.check_output('cd {} && osc up'.
                                                      format(os.path.join(dlp3_path, p)),
                                                      shell=True)
-                    print("updating dlp3 checkout for", p)
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
