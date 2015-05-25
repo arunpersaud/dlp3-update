@@ -28,7 +28,7 @@
     "python3-arrow": "https://github.com/crsmithdev/arrow/blob/master/HISTORY.md",
     "python3-astroid": "https://bitbucket.org/logilab/astroid/src",
     "python3-astropy": "https://github.com/astropy/astropy/blob/v1.0.x/CHANGES.rst",
-    "python3-asyncssh": "http://asyncssh.timeheart.net/changes.html",
+    "python3-asyncssh": "http://asyncssh.readthedocs.org/en/latest/changes.html",
     "python3-bcolz": "https://github.com/Blosc/bcolz/blob/master/RELEASE_NOTES.rst",
     "python3-billiard": "https://github.com/celery/billiard/blob/master/CHANGES.txt",
     "python3-blosc": "https://github.com/Blosc/python-blosc",
