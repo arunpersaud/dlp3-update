@@ -183,10 +183,12 @@ class myCMD(cmd.Cmd):
             # do some counting
             if status in['failed', 'unresolvable']:
                 bad += 1
-            elif status == 'succeeded':
+            elif status in ['succeeded']:
                 good += 1
             elif status in ['scheduled', 'building', 'blocked', 'finished']:
                 building += 1
+            elif status in ['excluded']:
+                pass
             else:
                 print(colored("unknown status", 'red'), status)
 
