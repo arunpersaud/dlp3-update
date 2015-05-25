@@ -136,7 +136,17 @@ class myCMD(cmd.Cmd):
                     and p not in existing]
 
         for p in packages:
+            print("---------------------------------")
+            print("updating dlp3 checkout for", p)
+            output = subprocess.check_output('cd {} && osc up'.
+                                             format(os.path.join(dlp3_path, p)),
+                                             shell=True)
+            print(output.decode('ascii'))
+        print("---------------------------------")
+
+        for p in packages:
             print("rm -rf", os.path.join(dlp3_branch_path, p))
+
         if len(packages) == 0:
             print("Nothing to clean up")
 
@@ -246,10 +256,6 @@ class myCMD(cmd.Cmd):
             for line in output.split('\n'):
                 if line.startswith("created request id"):
                     worked.append(p)
-                    print("updating dlp3 checkout for", p)
-                    output = subprocess.check_output('cd {} && osc up'.
-                                                     format(os.path.join(dlp3_path, p)),
-                                                     shell=True)
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
