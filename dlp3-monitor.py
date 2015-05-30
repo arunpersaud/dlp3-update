@@ -22,6 +22,7 @@ import configparser
 from termcolor import colored
 import os
 import subprocess
+import json
 import sys
 
 import concurrent.futures
@@ -129,6 +130,52 @@ class myCMD(cmd.Cmd):
 
     def complete_submit(self, text, line, begidx, endidx):
         return auto_complete_package_names(text, line, begidx, endidx)
+
+    def complete_addlog(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line, begidx, endidx)
+
+    def complete_listlog(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line, begidx, endidx)
+
+    def do_addlog(self, arg):
+        logs = dict()
+        with open(logfile, 'r') as f:
+            c = "".join(f.readlines())
+            if len(c) > 0:
+                logs = json.loads(c)
+        try:
+            name, url = arg.split(" ", maxsplit=1)
+            name = name.strip()
+            url = url.strip(' \'"')
+            logs[name] = url
+        except:
+            print("you need to supply a package name and a url or string")
+
+        with open(logfile, 'w') as f:
+            json.dump(logs, f, indent=4, sort_keys=True)
+        print("Added log file for {}.".format(name))
+
+    def do_listlog(self, arg):
+        logs = dict()
+        with open(logfile, 'r') as f:
+            c = "".join(f.readlines())
+            if len(c) > 0:
+                logs = json.loads(c)
+
+        packages = []
+        if arg == "":
+            packages = os.listdir(myCMD.dir)
+            packages = [p for p in packages if os.path.isdir(os.path.join(myCMD.dir, p)) and p != ".osc"]
+        elif arg == "all":
+            packages = [p for p in logs]
+        else:
+            packages = arg.split()
+
+        l = max([len(p) for p in packages])
+
+        for i in logs:
+            if i in packages:
+                print("{:<{length}} {}".format(i, logs[i], length=l+2))
 
     def do_cleanup(self, arg):
         try:
