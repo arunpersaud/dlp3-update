@@ -24,6 +24,10 @@ import os
 import subprocess
 import json
 import sys
+import xmlrpc.client as xmlrpclib
+import requests
+import natsort
+import glob
 
 import concurrent.futures
 pool = concurrent.futures.ThreadPoolExecutor(max_workers=7)
@@ -55,6 +59,27 @@ except (TypeError, KeyError):
 assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory"
 assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a directory"
 
+clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+client = xmlrpclib.MultiCall(clientpool)
+
+def get_skip():
+    """return a list of packages that should be skipped"""
+    SKIP = config['DEFAULT'].get('skip')
+    if SKIP is None:
+        SKIP = []
+    else:
+        SKIP = [s.strip() for s in SKIP.split(",")]
+
+    return SKIP
+
+def get_logs():
+    """return a dict with package-name->changelog location urls """
+    logs = dict()
+    with open(logfile, 'r') as f:
+        c = "".join(f.readlines())
+        if len(c) > 0:
+            logs = json.loads(c)
+    return logs
 
 def print_list(l):
     """print a list of packages"""
@@ -84,6 +109,35 @@ def auto_complete_package_names(text, line, begidx, endidx):
                 and p.startswith(lastword+text)]
     return packages
 
+def gen_get_name_version(specfiles):
+    for s in specfiles:
+        name, version, url = None, None, None
+        with open(s, 'r') as f:
+            for l in f:
+                if l.startswith("Version"):
+                    version = l.split(":")[1].strip()
+                if l.startswith("Source"):
+                    url = l.split(":", maxsplit=1)[1].strip()
+                    parts = l.split("/")
+                    if len(parts) > 6 and parts[2] == "pypi.python.org":
+                        name = parts[6]
+                if version and name:
+                    break
+        yield name, version, url
+
+def gen_fix_name1(l):
+    for [n, v, u], p in l:
+        if n is None:
+            if len(p.split("-")) > 1:
+                n = p.split("-", maxsplit=1)[1]
+        yield n, v, u, p
+
+def gen_fix_name2(l):
+    specialnames = {'usb': 'pyusb', 'xdg': 'pyxdg'}
+    for n, v, u, p in l:
+        if n in specialnames:
+            n = specialnames[n]
+        yield n, v, u, p
 
 class myCMD(cmd.Cmd):
     prompt = "Monitor> "
@@ -138,11 +192,7 @@ class myCMD(cmd.Cmd):
         return auto_complete_package_names(text, line, begidx, endidx)
 
     def do_addlog(self, arg):
-        logs = dict()
-        with open(logfile, 'r') as f:
-            c = "".join(f.readlines())
-            if len(c) > 0:
-                logs = json.loads(c)
+        logs = get_logs()
         try:
             name, url = arg.split(" ", maxsplit=1)
             name = name.strip()
@@ -156,12 +206,7 @@ class myCMD(cmd.Cmd):
         print("Added log file for {}.".format(name))
 
     def do_listlog(self, arg):
-        logs = dict()
-        with open(logfile, 'r') as f:
-            c = "".join(f.readlines())
-            if len(c) > 0:
-                logs = json.loads(c)
-
+        logs = get_logs()
         packages = []
         if arg == "":
             packages = os.listdir(myCMD.dir)
@@ -290,6 +335,110 @@ class myCMD(cmd.Cmd):
         self.packages = [p for p in self.packages
                          if p not in self.good_packages
                          and p not in self.bad_packages]
+
+    def do_check(self, arg):
+        global client
+        logs = get_logs()
+
+        # list of packages to check
+        if arg != "":
+            packages = arg.split()
+        else:
+            packages = glob.glob(os.path.join(dlp3_path, "python3*"))
+            packages = [os.path.basename(p) for p in packages]
+
+        # packages I'm already preparing an update for
+        PENDING = [i.split("/")[-1] for i in
+                   glob.glob(dlp3_branch_path+"/*")]
+
+        SKIP = get_skip() + PENDING
+
+        skipped = [p for p in packages if p in SKIP]
+        packages = [p for p in packages if p not in SKIP]
+
+        if len(skipped) > 0:
+            print("Skipping some packages:")
+            for p in skipped:
+                print("  ", p)
+
+        specfiles = [glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0] for p in packages]
+        patchfiles = [glob.glob("{}/*patch".format(os.path.join(dlp3_path, p))) for p in packages]
+
+        print("checking packages:")
+
+        name_version = gen_get_name_version(specfiles)
+        fix_name_version1 = gen_fix_name1(zip(name_version, packages))
+        # will use this list twice, so don't use a generator for this
+        fix_name_version2 = list(gen_fix_name2(fix_name_version1))
+
+        # do 60 requests at once, it doesn't work with all of them in one request
+        results = []
+        for i, [n, v, u, p] in enumerate(fix_name_version2):
+            if n is not None:
+                client.package_releases(n)
+            else:
+                client.package_releases('nonexistingdummy')
+            if not i % 60:
+                results += tuple(client())
+                # tried to parallize this with a concurrent pool, but they either all need
+                # their own client version (e.g. tcp connection) or it wouldn't work
+                # that is xmlrpclib.ServerProxy is not threadsafe
+                # this way should be faster as long as we only need a handful of connections
+                # currently roughly 360/60 = 6
+                client = xmlrpclib.MultiCall(clientpool)
+        results += tuple(client())
+
+        # we really only want the latest version
+        results = [r[0] if len(r) else None for r in results]
+
+        # package everything a bit nicer
+        data = [[v, r, n, u, s] for [n, v, u, p], s, r in zip(fix_name_version2, specfiles, results)]
+
+        good = 0
+        dev = 0
+        need = 0
+        neednopatch = 0
+        bad = 0
+        for d, pp, patch in zip(data, packages, patchfiles):
+            p = os.path.basename(pp)
+            old = d[0]
+            new = d[1]
+            # if git or hg in old, just check for version updates
+            if "+hg" in old or "+git" in old:
+                old = old.split("+")[0]
+            if old == new:
+                good += 1
+            if new is not None and ("dev" in new or
+                                    "rc" in new or
+                                    "post" in new or
+                                    "git" in new):
+                dev += 1
+                continue
+            if new is not None and new.endswith(('a', 'a1', 'a2', 'a3', 'a4', 'a5',
+                                                 'b', 'b1', 'b2', 'b3', 'b4', 'b5')):
+                dev += 1
+                continue
+            if old != new and new is not None and old == natsort.versorted([old, new])[0]:
+                need += 1
+                for i, c in enumerate(old):
+                    if i == len(new) or new[i] != c:
+                        break
+                if not patch:
+                    neednopatch += 1
+                patchstr = colored("nopatch", 'green') if not patch else "patch"
+                changelog = "+  " if p in logs else "   "
+                # length formatting doesn't work with color-escape
+                # characters in the string, so we do it by hand
+                print("{}{:40}  {}{}{}{}{}".
+                      format(changelog, p,
+                             old[:i]+colored(old[i:], 'red'), " "*(12-len(old)),
+                             new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
+                             patchstr))
+
+        print("found {} up to date packages,".format(good) +
+              " {} with a dev release, ".format(dev) +
+              "and {} packages that need an update,".format(need) +
+              " {} without a patch".format(neednopatch))
 
     def do_remove(self, args):
         """remove package form all the internal lists"""
