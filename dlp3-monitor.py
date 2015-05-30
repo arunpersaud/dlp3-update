@@ -65,6 +65,25 @@ def print_list(l):
             print("  ", p)
 
 
+def auto_complete_package_names(text, line, begidx, endidx):
+    """autocomplete package names
+
+    readline likes to split things up when it hits a '-'
+    so we need to check the last word on the line and
+    since 'text' could just be the text after a '-'.
+    """
+    lastword = line.split()[-1]
+    if len(text) > 0:
+        lastword = lastword[:-len(text)]
+    # skip the beginning if we already have it on the line
+    l = len(lastword)
+    packages = [p[l:] for p in os.listdir(myCMD.dir)
+                if os.path.isdir(os.path.join(dlp3_branch_path, p))
+                and p != ".osc"
+                and p.startswith(lastword+text)]
+    return packages
+
+
 class myCMD(cmd.Cmd):
     prompt = "Monitor> "
     dir = dlp3_branch_path
@@ -103,22 +122,13 @@ class myCMD(cmd.Cmd):
                 print("can't find ", p)
 
     def complete_add(self, text, line, begidx, endidx):
-        """autocomplete package names
+        return auto_complete_package_names(text, line, begidx, endidx)
 
-        readline likes to split things up when it hits a '-'
-        so we need to check the last word on the line and
-        since 'text' could just be the text after a '-'.
-        """
-        lastword = line.split()[-1]
-        if len(text) > 0:
-            lastword = lastword[:-len(text)]
-        # skip the beginning if we already have it on the line
-        l = len(lastword)
-        packages = [p[l:] for p in os.listdir(myCMD.dir)
-                    if os.path.isdir(os.path.join(dlp3_branch_path, p))
-                    and p != ".osc"
-                    and p.startswith(lastword+text)]
-        return packages
+    def complete_remove(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line, begidx, endidx)
+
+    def complete_submit(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line, begidx, endidx)
 
     def do_cleanup(self, arg):
         try:
