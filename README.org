@@ -38,7 +38,7 @@ define a list of packages that should be skipped during update checks.
      - check osc status
      - call osc vc, add changelog. Use link
        provided by dlp3-update or find changelog
-       and add link via 'dlp3-update addlog'
+       and add link via 'addlog' in the monitor program
      - edit spec file if needed
      - check in using 'osc ci -n'
   5) add package to monitor
