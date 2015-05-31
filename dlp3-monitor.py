@@ -240,9 +240,15 @@ class myCMD(cmd.Cmd):
         for p in packages:
             print("---------------------------------")
             print("updating dlp3 checkout for", p)
-            output = subprocess.check_output('cd {} && osc up'.
-                                             format(os.path.join(dlp3_path, p)),
-                                             shell=True)
+            try:
+                output = subprocess.check_output('cd {} && osc up'.
+                                                 format(os.path.join(dlp3_path, p)),
+                                                 shell=True)
+            except:
+                # package didn't exist yet, create a new checkout
+                output = subprocess.check_output('cd {} && osc co {}'.
+                                                 format(dlp3_path, p),
+                                                 shell=True)
             print(output.decode('ascii'))
         print("---------------------------------")
 
