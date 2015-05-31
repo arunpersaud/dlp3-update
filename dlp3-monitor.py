@@ -59,9 +59,6 @@ except (TypeError, KeyError):
 assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory"
 assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a directory"
 
-clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
-client = xmlrpclib.MultiCall(clientpool)
-
 def get_skip():
     """return a list of packages that should be skipped"""
     SKIP = config['DEFAULT'].get('skip')
@@ -110,6 +107,7 @@ def auto_complete_package_names(text, line, begidx, endidx):
     return packages
 
 def gen_get_name_version(specfiles):
+    """Get the package name, version. and source url from a specfile"""
     for s in specfiles:
         name, version, url = None, None, None
         with open(s, 'r') as f:
@@ -343,7 +341,6 @@ class myCMD(cmd.Cmd):
                          and p not in self.bad_packages]
 
     def do_check(self, arg):
-        global client
         logs = get_logs()
 
         # list of packages to check
@@ -376,6 +373,9 @@ class myCMD(cmd.Cmd):
         fix_name_version1 = gen_fix_name1(zip(name_version, packages))
         # will use this list twice, so don't use a generator for this
         fix_name_version2 = list(gen_fix_name2(fix_name_version1))
+
+        clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
+        client = xmlrpclib.MultiCall(clientpool)
 
         # do 60 requests at once, it doesn't work with all of them in one request
         results = []
