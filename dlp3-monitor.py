@@ -196,12 +196,11 @@ class myCMD(cmd.Cmd):
             name = name.strip()
             url = url.strip(' \'"')
             logs[name] = url
+            print("Added log file for {}.".format(name))
+            with open(logfile, 'w') as f:
+                json.dump(logs, f, indent=4, sort_keys=True)
         except:
             print("you need to supply a package name and a url or string")
-
-        with open(logfile, 'w') as f:
-            json.dump(logs, f, indent=4, sort_keys=True)
-        print("Added log file for {}.".format(name))
 
     def do_listlog(self, arg):
         logs = get_logs()
