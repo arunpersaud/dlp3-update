@@ -25,7 +25,6 @@ import subprocess
 import json
 import sys
 import xmlrpc.client as xmlrpclib
-import requests
 import natsort
 import glob
 
@@ -63,8 +62,10 @@ assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a 
 def get_skip():
     """return a dictionry of packages that should be skipped
 
-    The key is the package name and the value is a specific version number or "-" for all version.
-    The version number will be compared with natsort.
+    The key is the package name and the value is a specific version
+    number or "-" for all version.  The version number will be
+    compared with natsort.
+
     """
     SKIP = dict()
     with open(skipfile, 'r') as f:
@@ -92,7 +93,7 @@ def print_list(l):
             print("  ", p)
 
 
-def auto_complete_package_names(text, line, begidx, endidx):
+def auto_complete_package_names(text, line):
     """autocomplete package names
 
     readline likes to split things up when it hits a '-'
@@ -153,6 +154,7 @@ class myCMD(cmd.Cmd):
         self.good = 0
         self.bad = 0
         self.building = 0
+        self.longestname = 0
 
     def do_quit(self, arg):
         print("Good Bye!")
@@ -165,7 +167,9 @@ class myCMD(cmd.Cmd):
     def do_add(self, arg):
         if arg == "all":
             packages = os.listdir(myCMD.dir)
-            packages = [p for p in packages if os.path.isdir(os.path.join(myCMD.dir, p)) and p != ".osc"]
+            packages = [p for p in packages
+                        if os.path.isdir(os.path.join(myCMD.dir, p))
+                        and p != ".osc"]
         else:
             packages = arg.split()
         for p in packages:
@@ -179,25 +183,25 @@ class myCMD(cmd.Cmd):
                 print("can't find ", p)
 
     def complete_add(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def complete_remove(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def complete_submit(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def complete_addlog(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def complete_listlog(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def complete_ignore(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def complete_removeignore(self, text, line, begidx, endidx):
-        return auto_complete_package_names(text, line, begidx, endidx)
+        return auto_complete_package_names(text, line)
 
     def do_ignore(self, arg):
         """print the ignore list or adds a package to the list"""
@@ -225,7 +229,8 @@ class myCMD(cmd.Cmd):
                 with open(skipfile, 'w') as f:
                     json.dump(skip, f, indent=4, sort_keys=True)
             except:
-                print("you need to supply a package name and a version number, use '-' for all versions.")
+                print("you need to supply a package name and a version number,"+
+                      " use '-' for all versions.")
 
     def do_removeignore(self, arg):
         """remove a package from the ignore list"""
@@ -259,7 +264,9 @@ class myCMD(cmd.Cmd):
         packages = []
         if arg == "":
             packages = os.listdir(myCMD.dir)
-            packages = [p for p in packages if os.path.isdir(os.path.join(myCMD.dir, p)) and p != ".osc"]
+            packages = [p for p in packages
+                        if os.path.isdir(os.path.join(myCMD.dir, p))
+                        and p != ".osc"]
         elif arg == "all":
             packages = [p for p in logs]
         else:
@@ -351,7 +358,7 @@ class myCMD(cmd.Cmd):
 
         print("{:<{length}}    {:2}  {:2}   {:2}".
               format(p, good,
-                     " "+colored(bad, 'red') if bad >0 else bad,
+                     " "+colored(bad, 'red') if bad > 0 else bad,
                      building,
                      length=self.longestname))
 
@@ -372,7 +379,7 @@ class myCMD(cmd.Cmd):
         tocheck = self.good_packages + self.bad_packages + self.packages
         self.good_packages = []
         self.bad_packages = []
-        self.longestname = max([len(p) for p in tocheck]) if len(tocheck) >0 else 0
+        self.longestname = max([len(p) for p in tocheck]) if len(tocheck) > 0 else 0
 
         # parallel check
         if self.longestname > 0:
@@ -447,13 +454,13 @@ class myCMD(cmd.Cmd):
         results = [r[0] if len(r) else None for r in results]
 
         # package everything a bit nicer
-        data = [[v, r, n, u, s] for [n, v, u, p], s, r in zip(fix_name_version2, specfiles, results)]
+        data = [[v, r, n, u, s] for [n, v, u, p], s, r in
+                zip(fix_name_version2, specfiles, results)]
 
         good = 0
         dev = 0
         need = 0
         neednopatch = 0
-        bad = 0
         for d, pp, patch in zip(data, packages, patchfiles):
             p = os.path.basename(pp)
             old = d[0]
@@ -529,8 +536,8 @@ class myCMD(cmd.Cmd):
             print("---------------------------------")
             print("    ", p)
             print("")
-            output = subprocess.check_output('cd {} && osc submitrequest --yes -m "update to latest version"'.
-                                             format(os.path.join(myCMD.dir, p)),
+            output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, p)) +
+                                             ' && osc submitrequest --yes -m "update to latest version"',
                                              shell=True)
             output = output.decode('ascii')
             print(output)
