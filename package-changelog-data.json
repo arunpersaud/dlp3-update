@@ -18,6 +18,7 @@
     "python3-PySoundFile": "https://github.com/bastibe/PySoundFile",
     "python3-SQLAlchemy": "http://docs.sqlalchemy.org/en/latest/changelog",
     "python3-Sphinx": "https://github.com/sphinx-doc/sphinx/blob/master/CHANGES",
+    "python3-Unidecode": "see changelog in tar ball",
     "python3-WebOb": "http://docs.webob.org/en/latest/news.html",
     "python3-WebTest": "https://github.com/Pylons/webtest/blob/master/CHANGELOG.rst",
     "python3-Werkzeug": "https://github.com/mitsuhiko/werkzeug/blob/master/CHANGES",
