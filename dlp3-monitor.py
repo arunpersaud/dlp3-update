@@ -52,6 +52,7 @@ try:
     dlp3_branch_path = config['DEFAULT']['branch']
     bindir = os.path.dirname(os.path.realpath(__file__))
     logfile = os.path.join(bindir, 'package-changelog-data.json')
+    skipfile = os.path.join(bindir, 'package-skip-data.json')
 except (TypeError, KeyError):
     print("ERROR: Path for dlp3 and branch not found in DEFAULT section")
     sys.exit(2)
@@ -60,13 +61,16 @@ assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory
 assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a directory"
 
 def get_skip():
-    """return a list of packages that should be skipped"""
-    SKIP = config['DEFAULT'].get('skip')
-    if SKIP is None:
-        SKIP = []
-    else:
-        SKIP = [s.strip() for s in SKIP.split(",")]
+    """return a dictionry of packages that should be skipped
 
+    The key is the package name and the value is a specific version number or "-" for all version.
+    The version number will be compared with natsort.
+    """
+    SKIP = dict()
+    with open(skipfile, 'r') as f:
+        c = "".join(f.readlines())
+        if len(c) > 0:
+            SKIP = json.loads(c)
     return SKIP
 
 def get_logs():
@@ -188,6 +192,54 @@ class myCMD(cmd.Cmd):
 
     def complete_listlog(self, text, line, begidx, endidx):
         return auto_complete_package_names(text, line, begidx, endidx)
+
+    def complete_ignore(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line, begidx, endidx)
+
+    def complete_removeignore(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line, begidx, endidx)
+
+    def do_ignore(self, arg):
+        """print the ignore list or adds a package to the list"""
+        skip = get_skip()
+        if arg == "":
+            if len(skip) == 0:
+                print("Currently not ignoring any packages.")
+            else:
+                print("Currently ignoring the following packages")
+                for p in skip:
+                    print("  {} {}".format(p, skip[p]))
+        elif " " not in arg:
+            if arg in skip:
+                print("  {} {}".format(arg, skip[arg]))
+            else:
+                print("Currently not ignoring {}. If you want to add it, ".format(arg) +
+                      "provide a version number or '-' (for all versions).")
+        else:
+            try:
+                name, version = arg.split(" ", maxsplit=1)
+                name = name.strip()
+                version = version.strip()
+                skip[name] = version
+                print("Added {} {} to ignore list.".format(name, version))
+                with open(skipfile, 'w') as f:
+                    json.dump(skip, f, indent=4, sort_keys=True)
+            except:
+                print("you need to supply a package name and a version number, use '-' for all versions.")
+
+    def do_removeignore(self, arg):
+        """remove a package from the ignore list"""
+        skip = get_skip()
+        packages = arg.split()
+        try:
+            for p in packages:
+                result = skip.pop(p, None)
+                if result:
+                    print("removed {} from ignore list".format(p))
+            with open(skipfile, 'w') as f:
+                json.dump(skip, f, indent=4, sort_keys=True)
+        except:
+            print("you need to supply a package name or list of package names.")
 
     def do_addlog(self, arg):
         logs = get_logs()
@@ -353,10 +405,8 @@ class myCMD(cmd.Cmd):
         PENDING = [i.split("/")[-1] for i in
                    glob.glob(dlp3_branch_path+"/*")]
 
-        SKIP = get_skip() + PENDING
-
-        skipped = [p for p in packages if p in SKIP]
-        packages = [p for p in packages if p not in SKIP]
+        skipped = [p for p in packages if p in PENDING]
+        packages = [p for p in packages if p not in PENDING]
 
         if len(skipped) > 0:
             print("Skipping some packages:")
@@ -424,6 +474,24 @@ class myCMD(cmd.Cmd):
                                                  'c', 'c1', 'c2', 'c3', 'c4', 'c5')):
                 dev += 1
                 continue
+
+            # check if we this package is in the skip list
+            skip = get_skip()
+            extra = ""
+            if p in skip:
+                skipversion = skip[p]
+                if skipversion == '-':
+                    continue
+                # if version is newer, remove from skip otherwise skip
+                if new is not None and (skipversion == natsort.versorted([new, skipversion])[0]
+                                        and new != skipversion):
+                    result = skip.pop(p, None)
+                    if result:
+                        extra = " (removed from ignore list)"
+                        with open(skipfile, 'w') as f:
+                            json.dump(skip, f, indent=4, sort_keys=True)
+                else:
+                    continue
             if old != new and new is not None and old == natsort.versorted([old, new])[0]:
                 need += 1
                 for i, c in enumerate(old):
@@ -439,7 +507,7 @@ class myCMD(cmd.Cmd):
                       format(changelog, p,
                              old[:i]+colored(old[i:], 'red'), " "*(12-len(old)),
                              new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
-                             patchstr))
+                             patchstr+extra))
 
         print("found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
