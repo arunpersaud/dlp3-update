@@ -420,7 +420,8 @@ class myCMD(cmd.Cmd):
                 dev += 1
                 continue
             if new is not None and new.endswith(('a', 'a1', 'a2', 'a3', 'a4', 'a5',
-                                                 'b', 'b1', 'b2', 'b3', 'b4', 'b5')):
+                                                 'b', 'b1', 'b2', 'b3', 'b4', 'b5',
+                                                 'c', 'c1', 'c2', 'c3', 'c4', 'c5')):
                 dev += 1
                 continue
             if old != new and new is not None and old == natsort.versorted([old, new])[0]:
