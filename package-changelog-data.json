@@ -102,6 +102,7 @@
     "python3-objgraph": "http://mg.pov.lt/objgraph/CHANGES.html",
     "python3-odo": "https://github.com/ContinuumIO/odo/releases",
     "python3-openpyxl": "http://openpyxl.readthedocs.org/en/latest/",
+    "python3-pandas": "http://pandas.pydata.org/pandas-docs/stable/whatsnew.html",
     "python3-param": "http://ioam.github.io/param/#id1",
     "python3-pbr": "git clone git://git.openstack.org/openstack-dev/pbr",
     "python3-pep257": "https://github.com/GreenSteam/pep257/blob/master/docs/release_notes.rst",
