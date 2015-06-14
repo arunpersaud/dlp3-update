@@ -345,11 +345,12 @@ class myCMD(cmd.Cmd):
                 continue
 
             # do some counting
+            # the '' exists for example when there is a problem with OBS and items don't get scheduled
             if status in['failed', 'unresolvable']:
                 bad += 1
             elif status in ['succeeded']:
                 good += 1
-            elif status in ['scheduled', 'building', 'blocked', 'finished']:
+            elif status in ['scheduled', 'building', 'blocked', 'finished', '']:
                 building += 1
             elif status in ['excluded']:
                 pass
