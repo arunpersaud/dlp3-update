@@ -59,6 +59,7 @@ except (TypeError, KeyError):
 assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory"
 assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a directory"
 
+
 def get_skip():
     """return a dictionry of packages that should be skipped
 
@@ -74,6 +75,7 @@ def get_skip():
             SKIP = json.loads(c)
     return SKIP
 
+
 def get_logs():
     """return a dict with package-name->changelog location urls """
     logs = dict()
@@ -83,6 +85,7 @@ def get_logs():
             logs = json.loads(c)
     return logs
 
+
 def print_list(l):
     """print a list of packages"""
     if len(l) == 0:
@@ -91,6 +94,68 @@ def print_list(l):
         print("packages:")
         for p in l:
             print("  ", p)
+
+
+def my_update(package, d):
+    old = d[0]
+    new = d[1]
+    print("branching ", p)
+    # cd into dpl3 package, clone and checkout
+    # os.chdir is not threadsafe, so don't use it
+    olddir = os.path.join(dlp3_path, p)
+    os.system("cd {} && osc branch".format(olddir))
+    os.system("cd {} && osc co {}".format(dlp3_branch_path, p))
+
+    newdir = os.path.join(dlp3_branch_path, p)
+    # download new source
+    print("downloading")
+    url = d[3].replace("%{version}", new)
+    try:
+        r = requests.get(url, verify=False)
+        # use absolut url to make it thread-safe
+        with open(os.path.join(newdir, url.split("/")[-1]), 'wb') as f:
+            f.write(r.content)
+        print("download successful")
+    except:
+        print("couldn't download", p)
+        return
+    # add new package, remove old one
+    newpackage = url.split("/")[-1]
+    oldpackage = d[3].replace("%{version}", old).split("/")[-1]
+    print(oldpackage, "=>", newpackage)
+    os.system("cd {} && rm {}".format(newdir, oldpackage))
+    os.system("cd {} && osc addremove".format(newdir))
+    # update version in spec file
+    changelog = ""
+    spec = d[4].split("/")[-1]
+    with open(os.path.join(newdir, spec), "r+") as input:
+        content = input.readlines()
+        input.seek(0)
+        for line in content:
+            if "Version" in line and old in line:
+                line = line.replace(old, new)
+                # add changelog entry
+                changelog += "- update to version {}:".format(new)
+                changelog += "\n\n"
+            if "# Copyright (c)" in line:
+                year = datetime.now().year
+                if "2015" not in line:
+                    line = re.sub("\(c\) [0-9]{4} SUSE",
+                                  "(c) {} SUSE".format(year),
+                                  line)
+                    # add changelog entry
+                    changelog += "- specfile:\n"
+                    changelog += "  * update copyright year\n\n"
+            input.write(line)
+    # write changelog entries if we have any
+    if changelog != "":
+        file = spec.replace(".spec", ".changes")
+        with open(os.path.join(newdir, file), "r+") as changes:
+            content = changes.readlines()
+            changes.seek(0)
+            changes.write(changelog)
+            for l in content:
+                changes.write(l)
 
 
 def auto_complete_package_names(text, line):
@@ -111,6 +176,7 @@ def auto_complete_package_names(text, line):
                 and p.startswith(lastword+text)]
     return packages
 
+
 def gen_get_name_version(specfiles):
     """Get the package name, version. and source url from a specfile"""
     for s in specfiles:
@@ -128,6 +194,7 @@ def gen_get_name_version(specfiles):
                     break
         yield name, version, url
 
+
 def gen_fix_name1(l):
     for [n, v, u], p in l:
         if n is None:
@@ -135,12 +202,14 @@ def gen_fix_name1(l):
                 n = p.split("-", maxsplit=1)[1]
         yield n, v, u, p
 
+
 def gen_fix_name2(l):
     specialnames = {'usb': 'pyusb', 'xdg': 'pyxdg'}
     for n, v, u, p in l:
         if n in specialnames:
             n = specialnames[n]
         yield n, v, u, p
+
 
 class myCMD(cmd.Cmd):
     prompt = "Monitor> "
@@ -151,6 +220,7 @@ class myCMD(cmd.Cmd):
         self.packages = []
         self.good_packages = []
         self.bad_packages = []
+        self.need_update = []
         self.good = 0
         self.bad = 0
         self.building = 0
@@ -229,7 +299,7 @@ class myCMD(cmd.Cmd):
                 with open(skipfile, 'w') as f:
                     json.dump(skip, f, indent=4, sort_keys=True)
             except:
-                print("you need to supply a package name and a version number,"+
+                print("you need to supply a package name and a version number," +
                       " use '-' for all versions.")
 
     def do_removeignore(self, arg):
@@ -399,6 +469,20 @@ class myCMD(cmd.Cmd):
                          if p not in self.good_packages
                          and p not in self.bad_packages]
 
+    def do_update(self, arg):
+        """checkout these package to local branch, download new tar-ball,
+           update changes and spec file
+
+        """
+        if arg != "":
+            packages = arg.split()
+            packages = [p for p in packages if p in self.need_update]
+        else:
+            packages = self.need_update.keys()
+
+        for p in packages:
+            pool.submit(my_update, p, self.need_update[p])
+
     def do_check(self, arg):
         logs = get_logs()
 
@@ -462,6 +546,7 @@ class myCMD(cmd.Cmd):
         dev = 0
         need = 0
         neednopatch = 0
+        self.need_update = {}
         for d, pp, patch in zip(data, packages, patchfiles):
             p = os.path.basename(pp)
             old = d[0]
@@ -516,6 +601,7 @@ class myCMD(cmd.Cmd):
                              old[:i]+colored(old[i:], 'red'), " "*(12-len(old)),
                              new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
                              patchstr+extra))
+                self.need_update[p] = d
 
         print("found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
