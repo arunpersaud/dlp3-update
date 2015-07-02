@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#  dlp3.py   check packages that are being updated
+#  dlp3.py    check packages that are being updated
 #  Copyright (C) 2015 Arun Persaud <arun@nubati.net>
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -478,6 +478,7 @@ class myCMD(cmd.Cmd):
                                                         colored(str(self.bad), 'red'),
                                                         colored(str(self.building), 'yellow'))
         else:
+            print('Nothing to check. Please, use "add" to add package to the list.')
             myCMD.prompt = "Monitor> "
         # recreate list
         self.packages = [p for p in self.packages
