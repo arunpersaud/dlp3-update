@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#  dlp3-monitor.py   check packages that are being updated
+#  dlp3.py   check packages that are being updated
 #  Copyright (C) 2015 Arun Persaud <arun@nubati.net>
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -35,12 +35,12 @@ pool = concurrent.futures.ThreadPoolExecutor(max_workers=7)
 
 # read path information from config file
 config = configparser.ConfigParser()
-conf_file = config.read(['dlp3-update.conf',
-                         os.path.expanduser('~/.config/dlp3-update/dlp3-update.conf')])
+conf_file = config.read(['dlp3.conf',
+                         os.path.expanduser('~/.config/dlp3/dlp3.conf')])
 
 if len(conf_file) == 0:
-    print("Couldn't find dlp3-update.conf")
-    print("Please create a dlp3-update.conf file with the following information")
+    print("Couldn't find dlp3.conf")
+    print("Please create a dlp3.conf file with the following information")
     print("------")
     print("[DEFAULT]")
     print("dlp3 = <full path to your clone of dlp3>")
