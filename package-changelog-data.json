@@ -58,6 +58,7 @@
     "python3-django-haystack": "https://github.com/django-haystack/django-haystack/releases",
     "python3-django-markupfield": "https://github.com/jamesturk/django-markupfield/blob/master/CHANGELOG",
     "python3-django-mptt": "https://github.com/django-mptt/django-mptt/blob/master/docs/upgrade.rst",
+    "python3-django-nose": "https://pypi.python.org/pypi/django-nose",
     "python3-django-reversion": "https://github.com/etianen/django-reversion/blob/master/CHANGELOG.rst",
     "python3-django-rosetta": "https://github.com/mbi/django-rosetta/blob/develop/CHANGES",
     "python3-django-taggit": "https://github.com/alex/django-taggit/blob/master/CHANGELOG.txt",
