@@ -27,6 +27,7 @@ import sys
 import xmlrpc.client as xmlrpclib
 import natsort
 import glob
+import requests
 
 # some tasks are done in parallel via concurrent.futures
 import concurrent.futures
@@ -103,15 +104,15 @@ def my_update(package, d):
     old = d[0]
     new = d[1]
 
-    print("branching ", p)
+    print("branching ", package)
 
     # cd into dpl3 package, clone and checkout
     # os.chdir is not threadsafe, so don't use it
-    orig_dir = os.path.join(dlp3_path, p)
+    orig_dir = os.path.join(dlp3_path, package)
     os.system("cd {} && osc branch".format(orig_dir))
-    os.system("cd {} && osc co {}".format(dlp3_branch_path, p))
+    os.system("cd {} && osc co {}".format(dlp3_branch_path, package))
 
-    branchdir = os.path.join(dlp3_branch_path, p)
+    branchdir = os.path.join(dlp3_branch_path, package)
 
     # download new source
     print("downloading")
@@ -123,7 +124,7 @@ def my_update(package, d):
             f.write(r.content)
         print("download successful")
     except:
-        print("couldn't download", p)
+        print("couldn't download", package)
         return
 
     # add new package, remove old one
@@ -486,16 +487,16 @@ class myCMD(cmd.Cmd):
     def do_update(self, arg):
         """checkout these package to local branch, download new tar-ball,
            update changes and spec file
-
         """
+
         if arg != "":
             packages = arg.split()
             packages = [p for p in packages if p in self.need_update]
         else:
             packages = self.need_update.keys()
 
-        for p in packages:
-            pool.submit(my_update, p, self.need_update[p])
+        fut = [pool.submit(my_update, p, self.need_update[p]) for p in packages]
+        concurrent.futures.wait(fut)
 
     def do_check(self, arg):
         logs = get_logs()
