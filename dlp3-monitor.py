@@ -28,6 +28,7 @@ import xmlrpc.client as xmlrpclib
 import natsort
 import glob
 
+# some tasks are done in parallel via concurrent.futures
 import concurrent.futures
 pool = concurrent.futures.ThreadPoolExecutor(max_workers=7)
 
@@ -38,7 +39,7 @@ conf_file = config.read(['dlp3-update.conf',
 
 if len(conf_file) == 0:
     print("Couldn't find dlp3-update.conf")
-    print("Please create a dlp3-update.conf file witht he following information")
+    print("Please create a dlp3-update.conf file with the following information")
     print("------")
     print("[DEFAULT]")
     print("dlp3 = <full path to your clone of dlp3>")
@@ -61,13 +62,13 @@ assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a 
 
 
 def get_skip():
-    """return a dictionry of packages that should be skipped
+    """return a dictionary of packages that should be skipped
 
     The key is the package name and the value is a specific version
     number or "-" for all version.  The version number will be
     compared with natsort.
-
     """
+
     SKIP = dict()
     with open(skipfile, 'r') as f:
         c = "".join(f.readlines())
@@ -97,38 +98,45 @@ def print_list(l):
 
 
 def my_update(package, d):
+    """Branch and checkout a package, download newer version and update spec/changes file"""
+
     old = d[0]
     new = d[1]
+
     print("branching ", p)
+
     # cd into dpl3 package, clone and checkout
     # os.chdir is not threadsafe, so don't use it
-    olddir = os.path.join(dlp3_path, p)
-    os.system("cd {} && osc branch".format(olddir))
+    orig_dir = os.path.join(dlp3_path, p)
+    os.system("cd {} && osc branch".format(orig_dir))
     os.system("cd {} && osc co {}".format(dlp3_branch_path, p))
 
-    newdir = os.path.join(dlp3_branch_path, p)
+    branchdir = os.path.join(dlp3_branch_path, p)
+
     # download new source
     print("downloading")
     url = d[3].replace("%{version}", new)
     try:
         r = requests.get(url, verify=False)
         # use absolut url to make it thread-safe
-        with open(os.path.join(newdir, url.split("/")[-1]), 'wb') as f:
+        with open(os.path.join(branchdir, url.split("/")[-1]), 'wb') as f:
             f.write(r.content)
         print("download successful")
     except:
         print("couldn't download", p)
         return
+
     # add new package, remove old one
     newpackage = url.split("/")[-1]
     oldpackage = d[3].replace("%{version}", old).split("/")[-1]
     print(oldpackage, "=>", newpackage)
-    os.system("cd {} && rm {}".format(newdir, oldpackage))
-    os.system("cd {} && osc addremove".format(newdir))
+    os.system("cd {} && rm {}".format(branchdir, oldpackage))
+    os.system("cd {} && osc addremove".format(branchdir))
+
     # update version in spec file
     changelog = ""
     spec = d[4].split("/")[-1]
-    with open(os.path.join(newdir, spec), "r+") as input:
+    with open(os.path.join(branchdir, spec), "r+") as input:
         content = input.readlines()
         input.seek(0)
         for line in content:
@@ -137,6 +145,7 @@ def my_update(package, d):
                 # add changelog entry
                 changelog += "- update to version {}:".format(new)
                 changelog += "\n\n"
+            # update copyright in spec and changes files
             if "# Copyright (c)" in line:
                 year = datetime.now().year
                 if "2015" not in line:
@@ -150,7 +159,7 @@ def my_update(package, d):
     # write changelog entries if we have any
     if changelog != "":
         file = spec.replace(".spec", ".changes")
-        with open(os.path.join(newdir, file), "r+") as changes:
+        with open(os.path.join(branchdir, file), "r+") as changes:
             content = changes.readlines()
             changes.seek(0)
             changes.write(changelog)
@@ -165,6 +174,7 @@ def auto_complete_package_names(text, line):
     so we need to check the last word on the line and
     since 'text' could just be the text after a '-'.
     """
+
     lastword = line.split()[-1]
     if len(text) > 0:
         lastword = lastword[:-len(text)]
@@ -231,6 +241,10 @@ class myCMD(cmd.Cmd):
         return True
 
     def do_bye(self, arg):
+        print("Good Bye!")
+        return True
+
+    def do_exit(self, arg):
         print("Good Bye!")
         return True
 
