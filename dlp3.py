@@ -505,6 +505,9 @@ class myCMD(cmd.Cmd):
         else:
             packages = self.need_update.keys()
 
+        if len(packages) == 0:
+            print("Can't find any packages that need updates. Did you run 'check' first?")
+
         fut = [pool.submit(my_update, p, self.need_update[p]) for p in packages]
         concurrent.futures.wait(fut)
 
