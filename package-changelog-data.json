@@ -101,6 +101,7 @@
     "python3-keyring": "https://github.com/jaraco/keyring/blob/master/CHANGES.rst",
     "python3-kombu": "https://github.com/celery/kombu/blob/master/Changelog",
     "python3-lazyarray": "https://bitbucket.org/apdavison/lazyarray/src",
+    "python3-logilab-common": "http://hg.logilab.org/review/logilab/common/",
     "python3-lxml": "http://lxml.de/",
     "python3-mccabe": "https://github.com/flintwork/mccabe/commits/master",
     "python3-mistune": "https://github.com/lepture/mistune/blob/master/CHANGES.rst",
