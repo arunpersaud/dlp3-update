@@ -437,7 +437,7 @@ class myCMD(cmd.Cmd):
                 bad += 1
             elif status in ['succeeded']:
                 good += 1
-            elif status in ['scheduled', 'building', 'blocked', 'finished', '']:
+            elif status in ['scheduled', 'building', 'blocked', 'finished', 'signing', '']:
                 building += 1
             elif status in ['excluded']:
                 pass
