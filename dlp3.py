@@ -442,12 +442,6 @@ class myCMD(cmd.Cmd):
             else:
                 print(colored("unknown status", 'red'), status)
 
-        print("{:<{length}}    {:2}  {:2}   {:2}".
-              format(p, good,
-                     " "+colored(bad, 'red') if bad > 0 else bad,
-                     building,
-                     length=self.longestname))
-
         if building == 0:
             if bad == 0:
                 self.good += 1
@@ -457,6 +451,8 @@ class myCMD(cmd.Cmd):
                 self.bad_packages.append(p)
         else:
             self.building += 1
+
+        return p, good, bad, building
 
     def do_status(self, arg):
         self.good = 0
@@ -473,6 +469,17 @@ class myCMD(cmd.Cmd):
                   format("name", length=self.longestname+2))
         fut = [pool.submit(self.check_package, p) for p in tocheck]
         concurrent.futures.wait(fut)
+
+        result = []
+        for f in fut:
+            result.append(f.result())
+        for p, good, bad, building in sorted(result):
+            print("{:<{length}}    {:2}  {:2}   {:2}".
+                  format(p, good,
+                         " "+colored(bad, 'red') if bad > 0 else bad,
+                         building,
+                         length=self.longestname))
+
         if self.bad or self.good or self.building:
             myCMD.prompt = "Monitor({},{},{})> ".format(colored(str(self.good), 'green'),
                                                         colored(str(self.bad), 'red'),
