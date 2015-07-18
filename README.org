@@ -1,7 +1,9 @@
-Some small scripts to help updating python3 packages on the openSUSE
+A small script to help updating python3 packages on the openSUSE
 build server:
 
 https://build.opensuse.org/project/show/devel:languages:python3
+
+Could also be used for python2.7 with some tiny modifications.
 
 * Files
 ** dlp3.py
@@ -29,7 +31,6 @@ define a list of packages that should be skipped during update checks.
 * Workflow
   My standard workflow is to:
   1) run dlp3.py
-  2) run check in dlp3
   3) run update <list of packages>
   4) go into a newly created branch
      - check osc status
@@ -42,7 +43,8 @@ define a list of packages that should be skipped during update checks.
   6) repeat step 4 and 5
   7) run 'status'
   8) when enough packages finished building successfully, run
-     'submit' and then 'cleanup'
+     'submit', go to the webpage and accept requests (currently not automated
+     since I like to check the diff over there) and then 'cleanup'
 
 * Installation
 
@@ -52,12 +54,7 @@ Just use the files directly from the git-repo or create links into for
 example your ~/bin directory. In this case you should also link the
 config file to ~/.config/dlp3/
 
-
 * TO-DO
   - The program could check every 5 seconds automatically
-  - Handle packages that don't build correctly better, e.g. also check
-    for updates for packages in your home-branch, but only list them
-    if there is a newer version available then the one you are already
-    working on
   - open changelogs automatically in your browser
   - "adding" a program should do 'osc ci -n'
