@@ -184,9 +184,9 @@ def auto_complete_package_names(text, line):
     # skip the beginning if we already have it on the line
     l = len(lastword)
     packages = [p[l:] for p in os.listdir(myCMD.dir)
-                if os.path.isdir(os.path.join(dlp3_branch_path, p))
-                and p != ".osc"
-                and p.startswith(lastword+text)]
+                if os.path.isdir(os.path.join(dlp3_branch_path, p)) and
+                p != ".osc" and
+                p.startswith(lastword+text)]
     return packages
 
 
@@ -255,8 +255,8 @@ class myCMD(cmd.Cmd):
         if arg == "all":
             packages = os.listdir(myCMD.dir)
             packages = [p for p in packages
-                        if os.path.isdir(os.path.join(myCMD.dir, p))
-                        and p != ".osc"]
+                        if os.path.isdir(os.path.join(myCMD.dir, p)) and
+                        p != ".osc"]
         else:
             packages = arg.split()
         for p in packages:
@@ -352,8 +352,8 @@ class myCMD(cmd.Cmd):
         if arg == "":
             packages = os.listdir(myCMD.dir)
             packages = [p for p in packages
-                        if os.path.isdir(os.path.join(myCMD.dir, p))
-                        and p != ".osc"]
+                        if os.path.isdir(os.path.join(myCMD.dir, p)) and
+                        p != ".osc"]
         elif arg == "all":
             packages = [p for p in logs]
         else:
@@ -376,9 +376,9 @@ class myCMD(cmd.Cmd):
 
         packages = os.listdir(myCMD.dir)
         packages = [p for p in packages
-                    if os.path.isdir(os.path.join(dlp3_branch_path, p))
-                    and p != ".osc"
-                    and p not in existing]
+                    if os.path.isdir(os.path.join(dlp3_branch_path, p)) and
+                    p != ".osc" and
+                    p not in existing]
 
         for p in packages:
             print("---------------------------------")
@@ -432,7 +432,8 @@ class myCMD(cmd.Cmd):
                 continue
 
             # do some counting
-            # the '' exists for example when there is a problem with OBS and items don't get scheduled
+            # the '' exists for example when there is a problem with
+            # OBS and items don't get scheduled
             if status in['failed', 'unresolvable']:
                 bad += 1
             elif status in ['succeeded']:
@@ -491,8 +492,8 @@ class myCMD(cmd.Cmd):
             myCMD.prompt = "Monitor> "
         # recreate list
         self.packages = [p for p in self.packages
-                         if p not in self.good_packages
-                         and p not in self.bad_packages]
+                         if p not in self.good_packages and
+                         p not in self.bad_packages]
 
     def do_update(self, arg):
         """checkout these package to local branch, download new tar-ball,
@@ -604,8 +605,8 @@ class myCMD(cmd.Cmd):
                 if skipversion == '-':
                     continue
                 # if version is newer, remove from skip otherwise skip
-                if new is not None and (skipversion == natsort.versorted([new, skipversion])[0]
-                                        and new != skipversion):
+                if new is not None and (skipversion == natsort.versorted([new, skipversion])[0] and
+                                        new != skipversion):
                     result = skip.pop(p, None)
                     if result:
                         extra = " (removed from ignore list)"
