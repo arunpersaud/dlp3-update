@@ -664,4 +664,18 @@ class myCMD(cmd.Cmd):
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
+    def do_save(self, arg):
+        """Save current packages, so that we can restart the program later"""
+        with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
+            json.dump(self.packages, f, indent=4, sort_keys=True)
+            print("Saved package list for next run. Use 'load' to read the list back")
+
+    def do_load(self, arg):
+        """load last list of packages"""
+        with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'r') as f:
+            c = "".join(f.readlines())
+            if len(c) > 0:
+                self.packages = json.loads(c)
+            print("Loaded package list")
+
 myCMD().cmdloop()
