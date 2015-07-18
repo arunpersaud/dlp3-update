@@ -106,13 +106,18 @@ def my_update(package, d):
     old = d[0]
     new = d[1]
 
-    print("branching ", package)
+    specfile = d[4]
 
-    # cd into dpl3 package, clone and checkout
-    # os.chdir is not threadsafe, so don't use it
-    orig_dir = os.path.join(dlp3_path, package)
-    os.system("cd {} && osc branch".format(orig_dir))
-    os.system("cd {} && osc co {}".format(dlp3_branch_path, package))
+    if dlp3_branch_path in specfile:
+        print("updating already branched package")
+        os.system("cd {} && osc up".format(os.path.join(dlp3_branch_path, package)))
+    else:
+        print("branching ", package)
+
+        # cd into dpl3 package, clone and checkout
+        # os.chdir is not threadsafe, so don't use it
+        os.system("cd {} && osc branch".format(os.path.join(dlp3_path, package)))
+        os.system("cd {} && osc co {}".format(dlp3_branch_path, package))
 
     branchdir = os.path.join(dlp3_branch_path, package)
 
@@ -188,40 +193,6 @@ def auto_complete_package_names(text, line):
                 p != ".osc" and
                 p.startswith(lastword+text)]
     return packages
-
-
-def gen_get_name_version(specfiles):
-    """Get the package name, version. and source url from a specfile"""
-    for s in specfiles:
-        name, version, url = None, None, None
-        with open(s, 'r') as f:
-            for l in f:
-                if l.startswith("Version"):
-                    version = l.split(":")[1].strip()
-                if l.startswith("Source"):
-                    url = l.split(":", maxsplit=1)[1].strip()
-                    parts = l.split("/")
-                    if len(parts) > 6 and parts[2] == "pypi.python.org":
-                        name = parts[6]
-                if version and name:
-                    break
-        yield name, version, url
-
-
-def gen_fix_name1(l):
-    for [n, v, u], p in l:
-        if n is None:
-            if len(p.split("-")) > 1:
-                n = p.split("-", maxsplit=1)[1]
-        yield n, v, u, p
-
-
-def gen_fix_name2(l):
-    specialnames = {'usb': 'pyusb', 'xdg': 'pyxdg'}
-    for n, v, u, p in l:
-        if n in specialnames:
-            n = specialnames[n]
-        yield n, v, u, p
 
 
 class myCMD(cmd.Cmd):
@@ -526,30 +497,49 @@ class myCMD(cmd.Cmd):
         PENDING = [i.split("/")[-1] for i in
                    glob.glob(dlp3_branch_path+"/*")]
 
-        skipped = [p for p in packages if p in PENDING]
-        packages = [p for p in packages if p not in PENDING]
-
-        if len(skipped) > 0:
-            print("Skipping some packages:")
-            for p in skipped:
-                print("  ", p)
-
-        specfiles = [glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0] for p in packages]
-        patchfiles = [glob.glob("{}/*patch".format(os.path.join(dlp3_path, p))) for p in packages]
+        specfiles = []
+        patchfiles = []
+        for p in packages:
+            path = dlp3_branch_path if p in PENDING else dlp3_path
+            s = glob.glob("{}/*spec".format(os.path.join(path, p)))[0]
+            p = glob.glob("{}/*patch".format(os.path.join(path, p)))
+            specfiles.append(s)
+            patchfiles.append(p)
 
         print("checking packages:")
 
-        name_version = gen_get_name_version(specfiles)
-        fix_name_version1 = gen_fix_name1(zip(name_version, packages))
-        # will use this list twice, so don't use a generator for this
-        fix_name_version2 = list(gen_fix_name2(fix_name_version1))
+        # create a list of name, version, url, package that we can iterate over later
+        name_version = []
+        for s, p in zip(specfiles, packages):
+            name, version, url = None, None, None
+            # get some information out of the specfiles
+            with open(s, 'r') as f:
+                for l in f:
+                    if l.startswith("Version"):
+                        version = l.split(":")[1].strip()
+                    if l.startswith("Source"):
+                        url = l.split(":", maxsplit=1)[1].strip()
+                        parts = l.split("/")
+                        if len(parts) > 6 and parts[2] == "pypi.python.org":
+                            name = parts[6]
+                    if version and name:
+                        break
+            # fix the names for some packages that are not on pypi
+            if name is None:
+                if len(p.split("-")) > 1:
+                    name = p.split("-", maxsplit=1)[1]
+            # some packages have special names
+            specialnames = {'usb': 'pyusb', 'xdg': 'pyxdg'}
+            if name in specialnames:
+                    name = specialnames[name]
+            name_version.append([name, version, url, p])
 
         clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
         client = xmlrpclib.MultiCall(clientpool)
 
         # do 60 requests at once, it doesn't work with all of them in one request
         results = []
-        for i, [n, v, u, p] in enumerate(fix_name_version2):
+        for i, [n, v, u, p] in enumerate(name_version):
             if n is not None:
                 client.package_releases(n)
             else:
@@ -560,7 +550,7 @@ class myCMD(cmd.Cmd):
                 # their own client version (e.g. tcp connection) or it wouldn't work
                 # that is xmlrpclib.ServerProxy is not threadsafe
                 # this way should be faster as long as we only need a handful of connections
-                # currently roughly 360/60 = 6
+                # currently roughly 360 packages/60 = 6
                 client = xmlrpclib.MultiCall(clientpool)
         results += tuple(client())
 
@@ -569,7 +559,7 @@ class myCMD(cmd.Cmd):
 
         # package everything a bit nicer
         data = [[v, r, n, u, s] for [n, v, u, p], s, r in
-                zip(fix_name_version2, specfiles, results)]
+                zip(name_version, specfiles, results)]
 
         good = 0
         dev = 0
@@ -597,7 +587,7 @@ class myCMD(cmd.Cmd):
                 dev += 1
                 continue
 
-            # check if we this package is in the skip list
+            # check if this package is in the skip list
             skip = get_skip()
             extra = ""
             if p in skip:
@@ -614,6 +604,8 @@ class myCMD(cmd.Cmd):
                             json.dump(skip, f, indent=4, sort_keys=True)
                 else:
                     continue
+            if p in PENDING:
+                extra = " (already branched)"
             if old != new and new is not None and old == natsort.versorted([old, new])[0]:
                 need += 1
                 for i, c in enumerate(old):
