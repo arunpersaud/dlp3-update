@@ -223,6 +223,7 @@ class myCMD(cmd.Cmd):
         return True
 
     def do_add(self, arg):
+        """Start monitoring the build status for the given package(s)."""
         if arg == "all":
             packages = os.listdir(myCMD.dir)
             packages = [p for p in packages
@@ -305,6 +306,10 @@ class myCMD(cmd.Cmd):
             print("you need to supply a package name or list of package names.")
 
     def do_addlog(self, arg):
+        """Save the location of a changelog file. The first argument should be
+           the package name, the rest will be saved in a json file.
+
+        """
         logs = get_logs()
         try:
             name, url = arg.split(" ", maxsplit=1)
@@ -318,6 +323,11 @@ class myCMD(cmd.Cmd):
             print("you need to supply a package name and a url or string")
 
     def do_listlog(self, arg):
+        """List the location of changelog files for the given
+           packages. Without an argument show the information for all
+           branched packages
+
+        """
         logs = get_logs()
         packages = []
         if arg == "":
@@ -337,6 +347,13 @@ class myCMD(cmd.Cmd):
                 print("{:<{length}} {}".format(i, logs[i], length=l+2))
 
     def do_cleanup(self, arg):
+        """Check for packages that are still in the local branch, but not in
+           the online one anymore.  These are normally the packages
+           for which a SR got accepted. Update those package in the
+           local checkout of dlp3 and print a command to remove the
+           local copy.
+
+        """
         try:
             output = subprocess.check_output(['osc', 'list', os.path.basename(myCMD.dir)])
             existing = output.decode('ascii').split('\n')
@@ -429,6 +446,7 @@ class myCMD(cmd.Cmd):
         return p, good, bad, building
 
     def do_status(self, arg):
+        """Print the build status of all packages added by the 'add' command or by 'load'."""
         self.good = 0
         self.bad = 0
         self.building = 0
@@ -484,6 +502,11 @@ class myCMD(cmd.Cmd):
         concurrent.futures.wait(fut)
 
     def do_check(self, arg):
+        """Check for new packages on pypi. Without any arguments checks for
+           all packages in dlp3, otherwise only check for the given
+           packages.
+
+        """
         logs = get_logs()
 
         # list of packages to check
@@ -638,6 +661,7 @@ class myCMD(cmd.Cmd):
             self.packages = [p for p in self.packages if p != a]
 
     def do_submit(self, arg):
+        """Create SR for all packages that build correctly."""
         print("submitting all the good packages")
         worked = []
         for p in self.good_packages:
