@@ -670,4 +670,6 @@ class myCMD(cmd.Cmd):
                 self.packages = json.loads(c)
             print("Loaded package list")
 
-myCMD().cmdloop()
+A = myCMD()
+A.do_check("")
+A.cmdloop()
