@@ -125,7 +125,7 @@ def my_update(package, d):
     print("downloading")
     url = d[3].replace("%{version}", new)
     try:
-        r = requests.get(url, verify=False)
+        r = requests.get(url, verify=True)
         # use absolut url to make it thread-safe
         with open(os.path.join(branchdir, url.split("/")[-1]), 'wb') as f:
             f.write(r.content)
