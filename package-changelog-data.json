@@ -40,6 +40,7 @@
     "python3-cairocffi": "https://github.com/SimonSapin/cairocffi/commits/master",
     "python3-cassandra-driver": "https://github.com/datastax/python-driver/blob/master/CHANGELOG.rst",
     "python3-cffi": "http://cffi.readthedocs.org/en/latest/",
+    "python3-click": "see tar-ball",
     "python3-combi": "https://github.com/cool-RR/combi/blob/master/docs/changelog.txt",
     "python3-cryptography": "https://cryptography.io/en/latest/changelog/",
     "python3-curtsies": "git clone https://github.com/thomasballinger/curtsies.git",
