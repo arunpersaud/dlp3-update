@@ -428,7 +428,7 @@ class myCMD(cmd.Cmd):
                 good += 1
             elif status in ['scheduled', 'building', 'blocked', 'finished', 'signing', '']:
                 building += 1
-            elif status in ['excluded']:
+            elif status in ['excluded', 'disabled']:
                 pass
             else:
                 print(colored("unknown status", 'red'), status)
