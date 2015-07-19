@@ -342,7 +342,7 @@ class myCMD(cmd.Cmd):
 
         l = max([len(p) for p in packages])
 
-        for i in logs:
+        for i in sorted(logs):
             if i in packages:
                 print("{:<{length}} {}".format(i, logs[i], length=l+2))
 
