@@ -513,6 +513,10 @@ class myCMD(cmd.Cmd):
         fut = [pool.submit(my_update, p, self.need_update[p]) for p in packages]
         concurrent.futures.wait(fut)
 
+        print('')
+        print('Links to the changelog files:')
+        self.do_listlog(arg)
+
     def do_check(self, arg):
         """Check for new packages on pypi. Without any arguments checks for
            all packages in dlp3, otherwise only check for the given
