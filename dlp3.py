@@ -403,9 +403,17 @@ class myCMD(cmd.Cmd):
         print_list(self.bad_packages)
 
     def check_package(self, p):
-        output = subprocess.check_output("cd {} && osc results".
-                                         format(os.path.join(myCMD.dir, p)),
-                                         shell=True)
+        try:
+            output = subprocess.check_output("cd {} && osc results".
+                                             format(os.path.join(myCMD.dir, p)),
+                                             shell=True)
+        except CalledProcessError:
+            # package doesn't exist anymore, so remove it from the list
+            print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
+            if p in self.good_packages: self.good_packages.remove(p)
+            if p in self.bad_packages: self.bad_packages.remove(p)
+            if p in self.packages: self.packages.remove(p)
+            return p, 0, 0, 0
         output = output.decode('ascii')
         good, bad, building = 0, 0, 0
         for line in output.split('\n'):
