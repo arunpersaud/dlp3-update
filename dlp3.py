@@ -710,6 +710,12 @@ class myCMD(cmd.Cmd):
                 self.packages = json.loads(c)
             print("Loaded package list")
 
+            packs = os.listdir(myCMD.dir)
+            for p in self.packages:
+                if p not in packs:
+                    print("Package {} doesn't exist anymore... remove it from list.")
+                    self.packages.remove(p)
+
 A = myCMD()
 A.do_check("")
 A.cmdloop()
