@@ -385,6 +385,10 @@ class myCMD(cmd.Cmd):
 
         for p in packages:
             print("rm -rf", os.path.join(dlp3_branch_path, p))
+            if p in self.packages: packages.remove(p)
+            if p in self.good_packages: self.good_packages.remove(p)
+            if p in self.bad_packages: self.bad_packages.remove(p)
+            if p in self.need_update: self.need_update.remove(p)
 
         if len(packages) == 0:
             print("Nothing to clean up")
