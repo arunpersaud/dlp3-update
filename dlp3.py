@@ -407,7 +407,7 @@ class myCMD(cmd.Cmd):
             output = subprocess.check_output("cd {} && osc results".
                                              format(os.path.join(myCMD.dir, p)),
                                              shell=True)
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             # package doesn't exist anymore, so remove it from the list
             print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
             if p in self.good_packages: self.good_packages.remove(p)
