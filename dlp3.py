@@ -589,7 +589,7 @@ class myCMD(cmd.Cmd):
         need = 0
         neednopatch = 0
         self.need_update = {}
-        for d, pp, patch in zip(data, packages, patchfiles):
+        for d, pp, patch in sorted(zip(data, packages, patchfiles), key=lambda x: x[1]):
             p = os.path.basename(pp)
             old = d[0]
             new = d[1]
