@@ -211,6 +211,7 @@
     "python3-zdaemon": "https://pypi.python.org/pypi/zdaemon",
     "python3-zetup": "git clone https://github.com/userzimmermann/zetup.py.git",
     "python3-zope.component": "https://pypi.python.org/pypi/zope.component",
+    "python3-zope.exceptions": "https://pypi.python.org/pypi/zope.exceptions",
     "python3-zope.proxy": "https://pypi.python.org/pypi/zope.proxy",
     "python3-zope.security": "https://pypi.python.org/pypi/zope.security",
     "python3-zope.testing": "https://pypi.python.org/pypi/zope.testing",
