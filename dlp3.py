@@ -204,6 +204,7 @@ class myCMD(cmd.Cmd):
         self.packages = []
         self.good_packages = []
         self.bad_packages = []
+        self.dev_packages = []
         self.need_update = {}
         self.good = 0
         self.bad = 0
@@ -395,6 +396,9 @@ class myCMD(cmd.Cmd):
     def do_list(self, arg):
         print_list(self.packages)
 
+    def do_listdev(self, arg):
+        print_list(self.dev_packages)
+
     def do_good(self, arg):
         print_list(self.good_packages)
 
@@ -535,6 +539,8 @@ class myCMD(cmd.Cmd):
         PENDING = [i.split("/")[-1] for i in
                    glob.glob(dlp3_branch_path+"/*")]
 
+        self.dev_packages = []
+
         specfiles = []
         patchfiles = []
         for p in packages:
@@ -618,11 +624,13 @@ class myCMD(cmd.Cmd):
                                     "post" in new or
                                     "git" in new):
                 dev += 1
+                self.dev_packages.append(new)
                 continue
             if new is not None and new.endswith(('a', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6',
                                                  'b', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6',
                                                  'c', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6')):
                 dev += 1
+                self.dev_packages.append(new)
                 continue
 
             # check if this package is in the skip list
