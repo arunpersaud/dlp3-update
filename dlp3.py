@@ -624,13 +624,13 @@ class myCMD(cmd.Cmd):
                                     "post" in new or
                                     "git" in new):
                 dev += 1
-                self.dev_packages.append(new)
+                self.dev_packages.append(p+" "+new)
                 continue
             if new is not None and new.endswith(('a', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6',
                                                  'b', 'b1', 'b2', 'b3', 'b4', 'b5', 'b6',
                                                  'c', 'c1', 'c2', 'c3', 'c4', 'c5', 'c6')):
                 dev += 1
-                self.dev_packages.append(new)
+                self.dev_packages.append(p+" "+new)
                 continue
 
             # check if this package is in the skip list
@@ -669,12 +669,10 @@ class myCMD(cmd.Cmd):
                              new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
                              patchstr+extra))
                 self.need_update[p] = d
-
         print("found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,".format(need) +
               " {} without a patch".format(neednopatch))
-
     def do_remove(self, args):
         """remove package form all the internal lists"""
         args = args.split()
