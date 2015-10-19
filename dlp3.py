@@ -641,7 +641,7 @@ class myCMD(cmd.Cmd):
                 if skipversion == '-':
                     continue
                 # if version is newer, remove from skip otherwise skip
-                if new is not None and (skipversion == natsort.versorted([new, skipversion])[0] and
+                if new is not None and (skipversion == natsort.natsorted([new, skipversion])[0] and
                                         new != skipversion):
                     result = skip.pop(p, None)
                     if result:
@@ -652,7 +652,7 @@ class myCMD(cmd.Cmd):
                     continue
             if p in PENDING:
                 extra = " (already branched)"
-            if old != new and new is not None and old == natsort.versorted([old, new])[0]:
+            if old != new and new is not None and old == natsort.natsorted([old, new])[0]:
                 need += 1
                 for i, c in enumerate(old):
                     if i == len(new) or new[i] != c:
