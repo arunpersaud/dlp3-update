@@ -5,6 +5,5 @@
     "python3-irc": "-",
     "python3-lesscpy": "0.10.2",
     "python3-louis": "-",
-    "python3-pbr-doc": "-",
-    "python3-python-subunit": "1.1.0"
+    "python3-pbr-doc": "-"
 }
