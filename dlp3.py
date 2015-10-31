@@ -545,10 +545,15 @@ class myCMD(cmd.Cmd):
         patchfiles = []
         for p in packages:
             path = dlp3_branch_path if p in PENDING else dlp3_path
-            s = glob.glob("{}/*spec".format(os.path.join(path, p)))[0]
-            p = glob.glob("{}/*patch".format(os.path.join(path, p)))
-            specfiles.append(s)
-            patchfiles.append(p)
+            try:
+                s = glob.glob("{}/*spec".format(os.path.join(path, p)))[0]
+                p = glob.glob("{}/*patch".format(os.path.join(path, p)))
+                specfiles.append(s)
+                patchfiles.append(p)
+            except:
+                print("Error with package", path, p)
+                print("  perhaps this has been removed from dlp3?")
+                print("  (in which case you need to update the local copy)")
 
         print("checking packages:")
 
