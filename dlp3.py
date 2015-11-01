@@ -703,11 +703,14 @@ class myCMD(cmd.Cmd):
                                              ' && osc submitrequest --yes -m "update to latest version"',
                                              shell=True)
             output = output.decode('ascii')
-            print(output)
-            print("---------------------------------")
             for line in output.split('\n'):
+                print(line)
                 if line.startswith("created request id"):
                     worked.append(p)
+                    id = line.split()[-1]
+                    link = "https://build.opensuse.org/request/show/"+str(id)
+                    print("   link: ", link)
+            print("---------------------------------")
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
