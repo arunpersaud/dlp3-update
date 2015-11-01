@@ -53,6 +53,7 @@ if len(conf_file) == 0:
 try:
     dlp3_path = config['DEFAULT']['dlp3']
     dlp3_branch_path = config['DEFAULT']['branch']
+    dlp3_web_branch = config['DEFAULT']['webbranch']
     bindir = os.path.dirname(os.path.realpath(__file__))
     logfile = os.path.join(bindir, 'package-changelog-data.json')
     skipfile = os.path.join(bindir, 'package-skip-data.json')
@@ -484,11 +485,12 @@ class myCMD(cmd.Cmd):
         for f in fut:
             result.append(f.result())
         for p, good, bad, building in sorted(result):
-            print("{:<{length}}    {:2}  {:2}   {:2}".
+            # add link in case something went wrong
+            link = dlp3_web_branch+p if bad > 0 else ""
+            print("{:<{length}}    {:2}  {:2}   {:2}    {link}".
                   format(p, good,
                          " "+colored(bad, 'red') if bad > 0 else bad,
-                         building,
-                         length=self.longestname))
+                         building, length=self.longestname, link=link))
 
         if self.bad or self.good or self.building:
             myCMD.prompt = "Monitor({},{},{})> ".format(colored(str(self.good), 'green'),
