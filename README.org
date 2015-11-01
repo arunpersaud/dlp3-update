@@ -38,8 +38,7 @@ define a list of packages that should be skipped during update checks.
        provided by dlp3 or find changelog
        and add link via 'addlog'
      - edit spec file if needed
-     - check in using 'osc ci -n'
-  5) "add package" to start monitoring its progress
+  5) 'add <package>' to start monitoring its progress (does 'osc ci -n')
   6) repeat step 4 and 5
   7) run 'status'
   8) when enough packages finished building successfully, run
@@ -57,4 +56,3 @@ config file to ~/.config/dlp3/
 * TO-DO
   - The program could check every 5 seconds automatically
   - open changelogs automatically in your browser
-  - "adding" a program should do 'osc ci -n'

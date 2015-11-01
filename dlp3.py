@@ -237,6 +237,9 @@ class myCMD(cmd.Cmd):
                 print("adding ", p)
                 if p not in self.packages:
                     self.packages.append(p)
+                    output = subprocess.check_output('cd {} && osc ci -n'.
+                                                     format(os.path.join(dlp3_branch_path, p)),
+                                                     shell=True)
                 else:
                     print("already in list")
             else:
