@@ -9,5 +9,8 @@ dlp3 = /home/<user>/src/OBS/devel:languages:python3
 # your home:<username>:branches:devel:langauges:python3 path
 branch = /home/<user>/src/OBS/home:<obsuser>:branches:devel:languages:python3
 
+# webranch+package should be the link to the package on OBS
+webbranch = https://build.opensuse.org/package/show/<user>:branches:devel:languages:python3/
+
 # komma separated list of packages that will be skip
 #skip = python3-Attest, python3-irc, python3-louis
