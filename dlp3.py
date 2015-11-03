@@ -679,6 +679,27 @@ class myCMD(cmd.Cmd):
                              new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
                              patchstr+extra))
                 self.need_update[p] = d
+        print("checking for outdated packages in branch")
+        for p in PENDING:
+            try:
+                s1 = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))[0]
+                s2 = glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0]
+            except:
+                print("Error with package", path, p)
+                print("  perhaps this has been removed from dlp3?")
+                print("  (in which case you need to update the local copy)")
+            with open(s1, 'r') as f:
+                for l in f:
+                    if l.startswith("Version"):
+                        version1 = l.split(":")[1].strip()
+                        break
+            with open(s2, 'r') as f:
+                for l in f:
+                    if l.startswith("Version"):
+                        version2 = l.split(":")[1].strip()
+                        break
+            if version1 == natsort.natsorted([version1, version2])[0]:
+                print(p, "local: ", version1, "  dlp3: ",version2, dlp3_web_branch+p)
         print("found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,".format(need) +
