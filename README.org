@@ -28,6 +28,23 @@ the git repo should be stored.
 A simple config file that stores the path information. You can also
 define a list of packages that should be skipped during update checks.
 
+** OBSchanges-mode.el
+
+Make it easier to edit cut&paste changelog data in a .changes file. To
+use it in emacs do
+
+  1) add the source directory of dlp3 to emacs search path. For me that's
+     (add-to-list 'load-path (expand-file-name "~/src/Prog/dlp3-update"))
+  2) load the package
+     (require 'OBSchanges-mode)
+  3) automatically load it for .changes files
+     (setq auto-mode-alist (append (list (cons "\\.changes$" 'OBSchanges-mode)) auto-mode-alist))
+
+This will add three new keybinding:
+  f5 add a "  * " to a line and wrap it
+  f6 add a "    + " to a line and wrap it
+  f7 add a "- changes from version" to a line. The line should only contain the version number.
+
 * Workflow
   My standard workflow is to:
   1) run dlp3.py
@@ -43,7 +60,9 @@ define a list of packages that should be skipped during update checks.
   7) run 'status'
   8) when enough packages finished building successfully, run
      'submit', go to the webpage and accept requests (currently not automated
-     since I like to check the diff over there) and then 'cleanup'
+     since I like to check the diff over there)
+  9) run 'cleanup' to remove local files of repos that are not on OBS anymore,
+     e.g. after accepting SR
 
 * Installation
 
