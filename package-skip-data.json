@@ -1,10 +1,12 @@
 {
     "python3-Attest": "-",
     "python3-Babel-doc": "-",
-    "python3-Sphinx": "1.3.1",
     "python3-irc": "-",
+    "python3-jupyter_ipython-doc": "-",
     "python3-lesscpy": "0.10.2",
     "python3-louis": "-",
+    "python3-numpy-doc": "-",
     "python3-pbr-doc": "-",
+    "python3-py-doc": "-",
     "python3-pytest-doc": "-"
 }
