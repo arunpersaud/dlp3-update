@@ -157,7 +157,7 @@ def my_update(package, d):
             # update copyright in spec and changes files
             if "# Copyright (c)" in line:
                 year = datetime.now().year
-                if "2015" not in line:
+                if str(year) not in line:
                     line = re.sub("\(c\) [0-9]{4} SUSE",
                                   "(c) {} SUSE".format(year),
                                   line)
