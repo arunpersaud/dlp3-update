@@ -390,9 +390,12 @@ class myCMD(cmd.Cmd):
 
         for p in packages:
             print("rm -rf", os.path.join(dlp3_branch_path, p))
-            if p in self.packages: packages.remove(p)
-            if p in self.good_packages: self.good_packages.remove(p)
-            if p in self.bad_packages: self.bad_packages.remove(p)
+            if p in self.packages:
+                packages.remove(p)
+            if p in self.good_packages:
+                self.good_packages.remove(p)
+            if p in self.bad_packages:
+                self.bad_packages.remove(p)
 
         if len(packages) == 0:
             print("Nothing to clean up")
@@ -417,9 +420,12 @@ class myCMD(cmd.Cmd):
         except subprocess.CalledProcessError:
             # package doesn't exist anymore, so remove it from the list
             print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
-            if p in self.good_packages: self.good_packages.remove(p)
-            if p in self.bad_packages: self.bad_packages.remove(p)
-            if p in self.packages: self.packages.remove(p)
+            if p in self.good_packages:
+                self.good_packages.remove(p)
+            if p in self.bad_packages:
+                self.bad_packages.remove(p)
+            if p in self.packages:
+                self.packages.remove(p)
             return p, 0, 0, 0
         output = output.decode('ascii')
         good, bad, building = 0, 0, 0
@@ -585,7 +591,7 @@ class myCMD(cmd.Cmd):
             # some packages have special names
             specialnames = {'usb': 'pyusb', 'xdg': 'pyxdg'}
             if name in specialnames:
-                    name = specialnames[name]
+                name = specialnames[name]
             name_version.append([name, version, url, p])
 
         clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
@@ -699,11 +705,12 @@ class myCMD(cmd.Cmd):
                         version2 = l.split(":")[1].strip()
                         break
             if version1 == natsort.natsorted([version1, version2])[0]:
-                print(p, "local: ", version1, "  dlp3: ",version2, dlp3_web_branch+p)
+                print(p, "local: ", version1, "  dlp3: ", version2, dlp3_web_branch+p)
         print("found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,".format(need) +
               " {} without a patch".format(neednopatch))
+
     def do_remove(self, args):
         """remove package form all the internal lists"""
         args = args.split()
