@@ -249,6 +249,9 @@ class myCMD(cmd.Cmd):
     def complete_add(self, text, line, begidx, endidx):
         return auto_complete_package_names(text, line)
 
+    def complete_update(self, text, line, begidx, endidx):
+        return auto_complete_package_names(text, line)
+
     def complete_remove(self, text, line, begidx, endidx):
         return auto_complete_package_names(text, line)
 
