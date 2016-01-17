@@ -90,6 +90,7 @@
     "python3-django-reversion": "https://github.com/etianen/django-reversion/blob/master/CHANGELOG.rst",
     "python3-django-rosetta": "https://github.com/mbi/django-rosetta/blob/develop/CHANGES",
     "python3-django-taggit": "https://github.com/alex/django-taggit/blob/master/CHANGELOG.txt",
+    "python3-django-tastypie": "https://github.com/django-tastypie/django-tastypie/tree/master/docs/release_notes",
     "python3-django-tinymce": "https://pypi.python.org/pypi/django-tinymce",
     "python3-django-treebeard": "see tar ball",
     "python3-djangorecipe": "https://pypi.python.org/pypi/djangorecipe",
