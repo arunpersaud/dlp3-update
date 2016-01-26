@@ -8,5 +8,6 @@
     "python3-numpy-doc": "-",
     "python3-pbr-doc": "-",
     "python3-py-doc": "-",
-    "python3-pytest-doc": "-"
+    "python3-pytest-doc": "-",
+    "python3-virtualenv-doc": "-"
 }

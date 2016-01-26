@@ -182,6 +182,7 @@
     "python3-pep8": "https://github.com/jcrocholl/pep8/blob/master/CHANGES.txt",
     "python3-pep8-naming": "https://github.com/flintwork/pep8-naming",
     "python3-persistent": "https://pypi.python.org/pypi/persistent?",
+    "python3-piexif": "http://piexif.readthedocs.org/en/latest/changes.html",
     "python3-pip": "https://pip.pypa.io/en/latest/news.html",
     "python3-plotly": "https://github.com/plotly/python-api/blob/master/CHANGELOG.md",
     "python3-pluggy": "see tar ball",
