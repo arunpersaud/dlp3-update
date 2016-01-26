@@ -228,6 +228,7 @@
     "python3-pytz": "https://code.launchpad.net/~stub/pytz/devel",
     "python3-pyzmq": "https://github.com/zeromq/pyzmq/blob/master/docs/source/changelog.rst",
     "python3-pyzolib": "https://bitbucket.org/pyzo/pyzolib/commits/branch/default",
+    "python3-qrcode": "see tar ball",
     "python3-quamash": "https://pypi.python.org/pypi/Quamash/",
     "python3-raven": "https://github.com/getsentry/raven-python/blob/master/CHANGES",
     "python3-rdflib": "https://github.com/RDFLib/rdflib/releases",
