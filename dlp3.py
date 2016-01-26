@@ -484,11 +484,11 @@ class myCMD(cmd.Cmd):
         self.longestname = max([len(p) for p in tocheck]) if len(tocheck) > 0 else 0
 
         # parallel check
+        fut = [pool.submit(self.check_package, p) for p in tocheck]
+        concurrent.futures.wait(fut)
         if self.longestname > 0:
             print("{:^{length}} good bad building".
                   format("name", length=self.longestname+2))
-        fut = [pool.submit(self.check_package, p) for p in tocheck]
-        concurrent.futures.wait(fut)
 
         result = []
         for f in fut:
