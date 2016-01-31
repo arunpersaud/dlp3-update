@@ -213,14 +213,17 @@ class myCMD(cmd.Cmd):
         self.longestname = 0
 
     def do_quit(self, arg):
+        self.do_save('silent')
         print("Good Bye!")
         return True
 
     def do_bye(self, arg):
+        self.do_save('silent')
         print("Good Bye!")
         return True
 
     def do_exit(self, arg):
+        self.do_save('silent')
         print("Good Bye!")
         return True
 
@@ -513,6 +516,10 @@ class myCMD(cmd.Cmd):
                          if p not in self.good_packages and
                          p not in self.bad_packages]
 
+    def emptyline(self):
+        """Give status information on enter"""
+        self.do_status('')
+
     def do_update(self, arg):
         """checkout these package to local branch, download new tar-ball,
            update changes and spec file
@@ -749,7 +756,8 @@ class myCMD(cmd.Cmd):
         """Save current packages, so that we can restart the program later"""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
             json.dump(self.packages, f, indent=4, sort_keys=True)
-            print("Saved package list for next run. Use 'load' to read the list back")
+            if arg != 'silent':
+                print("Saved package list for next run. Use 'load' to read the list back")
 
     def do_load(self, arg):
         """load last list of packages"""
@@ -757,7 +765,8 @@ class myCMD(cmd.Cmd):
             c = "".join(f.readlines())
             if len(c) > 0:
                 self.packages = json.loads(c)
-            print("Loaded package list")
+            if arg != 'silent':
+                print("Loaded package list")
 
             packs = os.listdir(myCMD.dir)
             for p in self.packages:
@@ -766,5 +775,6 @@ class myCMD(cmd.Cmd):
                     self.packages.remove(p)
 
 A = myCMD()
-A.do_check("")
+A.do_load('silent')
+A.do_check('')
 A.cmdloop()
