@@ -101,6 +101,44 @@ def print_list(l):
             print("  ", p)
 
 
+def my_submit(package):
+    print("---------------------------------")
+    print("    ", package)
+    print("")
+
+    worked = None
+    output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package)) +
+                                     ' && osc submitrequest --yes -m "update to latest version"',
+                                     shell=True)
+    output = output.decode('ascii')
+    for line in output.split('\n'):
+        print(line)
+        if line.startswith("created request id"):
+            worked = package
+            id = line.split()[-1]
+            link = "https://build.opensuse.org/request/show/"+str(id)
+            print("   link: ", link)
+            print("---------------------------------")
+
+    return worked
+
+
+def my_cleanup(package):
+    print("---------------------------------")
+    print("updating dlp3 checkout for", package)
+    try:
+        output = subprocess.check_output('cd {} && osc up'.
+                                         format(os.path.join(dlp3_path, package)),
+                                         shell=True)
+    except:
+        # package didn't exist yet, create a new checkout
+        output = subprocess.check_output('cd {} && osc co {}'.
+                                         format(dlp3_path, package),
+                                         shell=True)
+    print(output.decode('ascii'))
+    print("---------------------------------")
+
+
 def my_update(package, d):
     """Branch and checkout a package, download newer version and update spec/changes file"""
 
@@ -379,20 +417,8 @@ class myCMD(cmd.Cmd):
                     p != ".osc" and
                     p not in existing]
 
-        for p in packages:
-            print("---------------------------------")
-            print("updating dlp3 checkout for", p)
-            try:
-                output = subprocess.check_output('cd {} && osc up'.
-                                                 format(os.path.join(dlp3_path, p)),
-                                                 shell=True)
-            except:
-                # package didn't exist yet, create a new checkout
-                output = subprocess.check_output('cd {} && osc co {}'.
-                                                 format(dlp3_path, p),
-                                                 shell=True)
-            print(output.decode('ascii'))
-        print("---------------------------------")
+        fut = [pool.submit(my_cleanup, p) for p in packages]
+        concurrent.futures.wait(fut)
 
         for p in packages:
             print("rm -rf", os.path.join(dlp3_branch_path, p))
@@ -733,22 +759,10 @@ class myCMD(cmd.Cmd):
         """Create SR for all packages that build correctly."""
         print("submitting all the good packages")
         worked = []
-        for p in self.good_packages:
-            print("---------------------------------")
-            print("    ", p)
-            print("")
-            output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, p)) +
-                                             ' && osc submitrequest --yes -m "update to latest version"',
-                                             shell=True)
-            output = output.decode('ascii')
-            for line in output.split('\n'):
-                print(line)
-                if line.startswith("created request id"):
-                    worked.append(p)
-                    id = line.split()[-1]
-                    link = "https://build.opensuse.org/request/show/"+str(id)
-                    print("   link: ", link)
-            print("---------------------------------")
+        fut = [pool.submit(my_submit, p) for p in self.good_packages]
+        concurrent.futures.wait(fut)
+        worked = [f.result() for f in fut]
+
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
