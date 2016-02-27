@@ -102,7 +102,7 @@ def print_list(l):
 
 
 def my_submit(package):
-    print("―"*(self.longestname+16))
+    print("―"*(len(package)+27))
     print("    ", package)
     print("")
 
@@ -118,13 +118,13 @@ def my_submit(package):
             id = line.split()[-1]
             link = "https://build.opensuse.org/request/show/"+str(id)
             print("   link: ", link)
-            print("―"*(self.longestname+16))
+            print("―"*(len(package)+27))
 
     return worked
 
 
 def my_cleanup(package):
-    print("―"*(self.longestname+16))
+    print("―"*(len(package)+16))
     print("updating dlp3 checkout for", package)
     try:
         output = subprocess.check_output('cd {} && osc up'.
@@ -136,7 +136,7 @@ def my_cleanup(package):
                                          format(dlp3_path, package),
                                          shell=True)
     print(output.decode('ascii'))
-    print("―"*(self.longestname+16))
+    print("―"*(len(package)+16))
 
 
 def my_update(package, d):
