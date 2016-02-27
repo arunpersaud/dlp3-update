@@ -248,6 +248,10 @@ class myCMD(cmd.Cmd):
         self.good = 0
         self.bad = 0
         self.building = 0
+        self.good_total = 0
+        self.bad_total = 0
+        self.good_lasttotal = 0
+        self.bad_lasttotal = 0
         self.longestname = 0
 
     def do_quit(self, arg):
@@ -507,6 +511,10 @@ class myCMD(cmd.Cmd):
         self.good = 0
         self.bad = 0
         self.building = 0
+        self.good_lasttotal = self.good_total
+        self.bad_lasttotal = self.bad_total
+        self.good_total = 0
+        self.bad_total = 0
         tocheck = self.good_packages + self.bad_packages + self.packages
         self.good_packages = []
         self.bad_packages = []
@@ -529,11 +537,19 @@ class myCMD(cmd.Cmd):
                   format(p, good,
                          " "+colored(bad, 'red') if bad > 0 else bad,
                          building, length=self.longestname, link=link))
+            self.good_total += good
+            self.bad_total += bad
 
         if self.bad or self.good or self.building:
-            myCMD.prompt = "Monitor({},{},{})> ".format(colored(str(self.good), 'green'),
-                                                        colored(str(self.bad), 'red'),
-                                                        colored(str(self.building), 'yellow'))
+            myCMD.prompt = "Monitor({},{},{} -- {}{:+},{}{:+})> ".format(colored(str(self.good), 'green'),
+                                                                         colored(
+                str(self.bad), 'red'),
+                colored(
+                str(self.building), 'yellow'),
+                self.good_total,
+                self.good_total-self.good_lasttotal,
+                self.bad_total,
+                self.bad_total-self.bad_lasttotal)
         else:
             print('Nothing to check. Please, use "add" to add package to the list.')
             myCMD.prompt = "Monitor> "
