@@ -102,7 +102,7 @@ def print_list(l):
 
 
 def my_submit(package):
-    print("---------------------------------")
+    print("―"*(self.longestname+16))
     print("    ", package)
     print("")
 
@@ -118,13 +118,13 @@ def my_submit(package):
             id = line.split()[-1]
             link = "https://build.opensuse.org/request/show/"+str(id)
             print("   link: ", link)
-            print("---------------------------------")
+            print("―"*(self.longestname+16))
 
     return worked
 
 
 def my_cleanup(package):
-    print("---------------------------------")
+    print("―"*(self.longestname+16))
     print("updating dlp3 checkout for", package)
     try:
         output = subprocess.check_output('cd {} && osc up'.
@@ -136,7 +136,7 @@ def my_cleanup(package):
                                          format(dlp3_path, package),
                                          shell=True)
     print(output.decode('ascii'))
-    print("---------------------------------")
+    print("―"*(self.longestname+16))
 
 
 def my_update(package, d):
@@ -539,17 +539,15 @@ class myCMD(cmd.Cmd):
                          building, length=self.longestname, link=link))
             self.good_total += good
             self.bad_total += bad
+        print("―"*(self.longestname+16))
+        print("{:<{length}}    {:+2}  {:+2}".
+              format("ΔΣ", self.good_total-self.good_lasttotal,
+                     self.bad_total-self.bad_lasttotal, length=self.longestname))
 
         if self.bad or self.good or self.building:
-            myCMD.prompt = "Monitor({},{},{} -- {}{:+},{}{:+})> ".format(colored(str(self.good), 'green'),
-                                                                         colored(
-                str(self.bad), 'red'),
-                colored(
-                str(self.building), 'yellow'),
-                self.good_total,
-                self.good_total-self.good_lasttotal,
-                self.bad_total,
-                self.bad_total-self.bad_lasttotal)
+            myCMD.prompt = "Monitor({},{},{})> ".format(colored(str(self.good), 'green'),
+                                                        colored(str(self.bad), 'red'),
+                                                        colored(str(self.building), 'yellow'))
         else:
             print('Nothing to check. Please, use "add" to add package to the list.')
             myCMD.prompt = "Monitor> "
