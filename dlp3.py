@@ -609,7 +609,8 @@ class myCMD(cmd.Cmd):
             try:
                 s = glob.glob("{}/*spec".format(os.path.join(path, p)))[0]
                 p = glob.glob("{}/*patch".format(os.path.join(path, p)))
-                specfiles.append(s)
+                if not s.endswith("-doc.spec"):
+                    specfiles.append(s)
                 patchfiles.append(p)
             except:
                 print("Error with package", path, p)
