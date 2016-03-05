@@ -607,10 +607,10 @@ class myCMD(cmd.Cmd):
         for p in packages:
             path = dlp3_branch_path if p in PENDING else dlp3_path
             try:
-                s = glob.glob("{}/*spec".format(os.path.join(path, p)))[0]
+                s = glob.glob("{}/*spec".format(os.path.join(path, p)))
+                s = [p for p in s if not p.endswith('-doc.spec')][0]
                 p = glob.glob("{}/*patch".format(os.path.join(path, p)))
-                if not s.endswith("-doc.spec"):
-                    specfiles.append(s)
+                specfiles.append(s)
                 patchfiles.append(p)
             except:
                 print("Error with package", path, p)
