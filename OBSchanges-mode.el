@@ -41,6 +41,9 @@
 	    (define-key map (kbd "<f5>") 'changelog-format-entry)
 	    (define-key map (kbd "<f6>") 'changelog-format-entry2)
 	    (define-key map (kbd "<f7>") 'changelog-insert-version)
-	    map))
+	    map)
+  (make-variable-buffer-local 'adaptive-fill-regexp)
+  ; add + to adaptive fill-prefix
+  (setq adaptive-fill-regexp "[ \t]*\\([-–!|#%;>*+·•‣⁃◦]+[ \t]*\\)*"))
 
 (provide 'OBSchanges-mode)
