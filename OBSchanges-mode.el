@@ -30,7 +30,8 @@
   (delete-whitespace-rectangle (point) (line-end-position) nil)
   (insert "- changes from version ")
   (end-of-line)
-  (insert ":\n"))
+  (insert ":")
+  (forward-line 1))
 
 
 ;;;###autoload
