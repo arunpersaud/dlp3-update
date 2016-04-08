@@ -170,7 +170,7 @@ def my_update(package, d):
             f.write(r.content)
         print("download successful")
     except:
-        print("couldn't download", package)
+        print("couldn't download", package, "at url", url)
         return
 
     # add new package, remove old one
@@ -183,35 +183,45 @@ def my_update(package, d):
     # update version in spec file
     changelog = ""
     spec = d[4].split("/")[-1]
-    with open(os.path.join(branchdir, spec), "r+") as input:
-        content = input.readlines()
-        input.seek(0)
-        for line in content:
-            if "Version" in line and old in line:
-                line = line.replace(old, new)
-                # add changelog entry
-                changelog += "- update to version {}:".format(new)
-                changelog += "\n\n"
-            # update copyright in spec and changes files
-            if "# Copyright (c)" in line:
-                year = datetime.now().year
-                if str(year) not in line:
-                    line = re.sub("\(c\) [0-9]{4} SUSE",
-                                  "(c) {} SUSE".format(year),
-                                  line)
-                    # add changelog entry
-                    changelog += "- specfile:\n"
-                    changelog += "  * update copyright year\n\n"
-            input.write(line)
+    files = [spec, spec.replace(".spec", "-doc.spec")]
+    for file in files:
+        try:
+            with open(os.path.join(branchdir, file), "r+") as input:
+                content = input.readlines()
+                input.seek(0)
+                for line in content:
+                    if "Version" in line and old in line:
+                        line = line.replace(old, new)
+                        # add changelog entry
+                        changelog += "- update to version {}:".format(new)
+                        changelog += "\n\n"
+                    # update copyright in spec and changes files
+                    if "# Copyright (c)" in line:
+                        year = datetime.now().year
+                        if str(year) not in line:
+                            line = re.sub("\(c\) [0-9]{4} SUSE",
+                                          "(c) {} SUSE".format(year),
+                                          line)
+                            # add changelog entry
+                            changelog += "- specfile:\n"
+                            changelog += "  * update copyright year\n\n"
+                    input.write(line)
+        except FileNotFoundError:
+            pass
     # write changelog entries if we have any
     if changelog != "":
-        file = spec.replace(".spec", ".changes")
-        with open(os.path.join(branchdir, file), "r+") as changes:
-            content = changes.readlines()
-            changes.seek(0)
-            changes.write(changelog)
-            for l in content:
-                changes.write(l)
+        # there might be two changelog files for -doc packages, just try both
+        files = [spec.replace(".spec", ".changes"), spec.replace(".spec", "-doc.changes")]
+        for file in files:
+            try:
+                with open(os.path.join(branchdir, file), "r+") as changes:
+                    content = changes.readlines()
+                    changes.seek(0)
+                    changes.write(changelog)
+                    for l in content:
+                        changes.write(l)
+            except FileNotFoundError:
+                pass
 
 
 def auto_complete_package_names(text, line):
@@ -552,7 +562,7 @@ class myCMD(cmd.Cmd):
             print('Nothing to check. Please, use "add" to add package to the list.')
             myCMD.prompt = "Monitor> "
         # recreate list
-        self.packages = [p for p in self.packages
+        self.packages = [p for p in tocheck
                          if p not in self.good_packages and
                          p not in self.bad_packages]
 
