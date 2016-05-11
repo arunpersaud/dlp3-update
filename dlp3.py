@@ -638,10 +638,10 @@ class myCMD(cmd.Cmd):
                 for l in f:
                     if l.startswith("Version"):
                         version = l.split(":")[1].strip()
-                    if l.startswith("Source"):
+                    if l.startswith("Source") and "version" in l:
                         url = l.split(":", maxsplit=1)[1].strip()
                         parts = l.split("/")
-                        if len(parts) > 6 and parts[2] == "pypi.python.org":
+                        if len(parts) > 6 and (parts[2] == "pypi.python.org" or parts[2] == "files.pythonhosted.org"):
                             name = parts[6]
                     if version and name:
                         break
