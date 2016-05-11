@@ -15,7 +15,6 @@
     "python3-pbr-doc": "-",
     "python3-py-doc": "-",
     "python3-pyOpenSSL-doc": "-",
-    "python3-pypet": "0.1b.12",
     "python3-pytest-doc": "-",
     "python3-virtualenv-doc": "-"
 }
