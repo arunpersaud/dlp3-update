@@ -464,14 +464,8 @@ class myCMD(cmd.Cmd):
                                              format(os.path.join(myCMD.dir, p)),
                                              shell=True)
         except subprocess.CalledProcessError:
-            # package doesn't exist anymore, so remove it from the list
-            print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
-            if p in self.good_packages:
-                self.good_packages.remove(p)
-            if p in self.bad_packages:
-                self.bad_packages.remove(p)
-            if p in self.packages:
-                self.packages.remove(p)
+            # package doesn't exist anymore, return all zeros and remove from list in caller
+            # since this is executed in a thread and won't udate the real class in the main thread
             return p, 0, 0, 0
         output = output.decode('ascii')
         good, bad, building = 0, 0, 0
@@ -541,6 +535,15 @@ class myCMD(cmd.Cmd):
         for f in fut:
             result.append(f.result())
         for p, good, bad, building in sorted(result):
+            if good == 0 and bad == 0 and building == 0:
+                print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
+                if p in self.good_packages:
+                    self.good_packages.remove(p)
+                if p in self.bad_packages:
+                    self.bad_packages.remove(p)
+                if p in self.packages:
+                    self.packages.remove(p)
+
             # add link in case something went wrong
             link = dlp3_web_branch+p if bad > 0 else ""
             print("{:<{length}}    {:2}  {:2}   {:2}    {link}".
