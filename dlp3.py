@@ -784,7 +784,11 @@ class myCMD(cmd.Cmd):
         """Create SR for all packages that build correctly."""
         print("submitting all the good packages")
         worked = []
-        fut = [pool.submit(my_submit, p) for p in self.good_packages]
+        if arg.startswith('-f'):
+            to_submit = arg.split()[1:]
+        else:
+            to_submit = self.good_packages
+        fut = [pool.submit(my_submit, p) for p in to_submit]
         concurrent.futures.wait(fut)
         worked = [f.result() for f in fut]
 
