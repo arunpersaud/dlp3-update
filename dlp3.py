@@ -91,14 +91,17 @@ def get_logs():
     return logs
 
 
-def print_list(l):
+def print_list(l, links=False):
     """print a list of packages"""
     if len(l) == 0:
         print("list is empty")
     else:
         print("packages:")
         for p in l:
-            print("  ", p)
+            if links:
+                print("  ", p, dlp3_web_branch+p)
+            else:
+                print("  ", p)
 
 
 def my_submit(package):
@@ -448,6 +451,9 @@ class myCMD(cmd.Cmd):
 
     def do_list(self, arg):
         print_list(self.packages)
+
+    def do_links(self, arg):
+        print_list(self.packages, links=True)
 
     def do_listdev(self, arg):
         print_list(self.dev_packages)
