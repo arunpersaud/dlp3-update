@@ -3,7 +3,10 @@
     "python3-Babel-doc": "-",
     "python3-WebOb-doc": "-",
     "python3-WebTest-doc": "-",
+    "python3-Werkzeug-doc": "-",
+    "python3-amqp-doc": "-",
     "python3-apache-libcloud": "1.0.0-pre1",
+    "python3-greenlet-doc": "-",
     "python3-irc": "-",
     "python3-jupyter_client-doc": "-",
     "python3-jupyter_console-doc": "-",
@@ -11,6 +14,7 @@
     "python3-jupyter_ipyparallel-doc": "-",
     "python3-jupyter_ipython-doc": "-",
     "python3-jupyter_ipywidgets-doc": "-",
+    "python3-jupyter_notebook-doc": "-",
     "python3-jupyter_qtconsole-doc": "-",
     "python3-louis": "-",
     "python3-mock-doc": "-",
@@ -23,5 +27,6 @@
     "python3-pyserial-doc": "-",
     "python3-pytest-doc": "-",
     "python3-testtools-doc": "-",
-    "python3-virtualenv-doc": "-"
+    "python3-virtualenv-doc": "-",
+    "python3-xlwt-doc": "-"
 }
