@@ -268,17 +268,17 @@ class myCMD(cmd.Cmd):
         self.longestname = 0
 
     def do_quit(self, arg):
-        self.do_save('silent')
+        self.save('silent')
         print("Good Bye!")
         return True
 
     def do_bye(self, arg):
-        self.do_save('silent')
+        self.save('silent')
         print("Good Bye!")
         return True
 
     def do_exit(self, arg):
-        self.do_save('silent')
+        self.save('silent')
         print("Good Bye!")
         return True
 
@@ -303,6 +303,7 @@ class myCMD(cmd.Cmd):
                     print("already in list")
             else:
                 print("can't find ", p)
+        self.save('silent')
 
     def complete_add(self, text, line, begidx, endidx):
         return auto_complete_package_names(text, line)
@@ -413,11 +414,13 @@ class myCMD(cmd.Cmd):
                 print("{:<{length}} {}".format(i, logs[i], length=l+2))
 
     def do_cleanup(self, arg):
-        """Check for packages that are still in the local branch, but not in
-           the online one anymore.  These are normally the packages
-           for which a SR got accepted. Update those package in the
-           local checkout of dlp3 and print a command to remove the
-           local copy.
+        """Remove package that have been updated.
+
+           Check for packages that are still in the local branch, but
+           not in the online one anymore.  These are normally the
+           packages for which a SR got accepted. Update those package
+           in the local checkout of dlp3 and print a command to remove
+           the local copy.
 
         """
         try:
@@ -448,6 +451,7 @@ class myCMD(cmd.Cmd):
 
         if len(packages) == 0:
             print("Nothing to clean up")
+        self.save('silent')
 
     def do_list(self, arg):
         print_list(self.packages)
@@ -804,15 +808,15 @@ class myCMD(cmd.Cmd):
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
-    def do_save(self, arg):
-        """Save current packages, so that we can restart the program later"""
+    def save(self, arg):
+        """Save current packages, so that we can restart the program later."""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
             json.dump(self.packages, f, indent=4, sort_keys=True)
             if arg != 'silent':
                 print("Saved package list for next run. Use 'load' to read the list back")
 
-    def do_load(self, arg):
-        """load last list of packages"""
+    def load(self, arg):
+        """Load last list of packages."""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'r') as f:
             c = "".join(f.readlines())
             if len(c) > 0:
@@ -827,6 +831,6 @@ class myCMD(cmd.Cmd):
                     self.packages.remove(p)
 
 A = myCMD()
-A.do_load('silent')
+A.load('silent')
 A.do_check('')
 A.cmdloop()
