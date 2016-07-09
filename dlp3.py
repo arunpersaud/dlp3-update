@@ -808,6 +808,94 @@ class myCMD(cmd.Cmd):
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
+    def do_new(self, arg):
+        """Create a new package."""
+        print("Creating new package")
+        print("package download url:")
+        url = input()
+        name = url.split('/')[7]
+        tarball = name.split('#')[0]
+        print('got tarball:', tarball)
+        name = '-'.join(tarball.split('-')[:-1])
+        print('got name:', name)
+        version = tarball[len(name):].split('-')[1]
+        if version.endswith('.tar.gz'):
+            version = version[:-7]
+            ending = '.tar.gz'
+        elif version.endswith('.zip'):
+            version = version[:-4]
+            ending = '.zip'
+        else:
+            print("not supported file ending")
+            return
+        print('got version:', version)
+        print('got ending:', ending)
+        subprocess.check_output('cd {}'.format(myCMD.dir) +
+                                ' && osc mkpac python3-{}'.format(name),
+                                shell=True)
+        try:
+            r = requests.get(url, verify=True)
+            # use absolut url to make it thread-safe
+            with open(os.path.join(dlp3_branch_path, 'python3-{}'.format(name), tarball), 'wb') as f:
+                f.write(r.content)
+            print("download successful")
+        except:
+            print("couldn't download package; url=", url)
+
+        with open(os.path.join(dlp3_branch_path, 'python3-{}'.format(name), 'python3-{}.spec'.format(name)), 'w') as f:
+            f.write('#\n')
+            f.write('# spec file for package python3-{}\n'.format(name))
+            f.write('#\n')
+            f.write('# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.\n')
+            f.write('#\n')
+            f.write('# All modifications and additions to the file contributed by third parties\n')
+            f.write('# remain the property of their copyright owners, unless otherwise agreed\n')
+            f.write('# upon. The license for this file, and modifications and additions to the\n')
+            f.write('# file, is the same license as for the pristine package itself (unless the\n')
+            f.write('# license for the pristine package is not an Open Source License, in which\n')
+            f.write('# case the license is the MIT License). An "Open Source License" is a\n')
+            f.write('# license that conforms to the Open Source Definition (Version 1.9)\n')
+            f.write('# published by the Open Source Initiative.\n')
+            f.write('\n')
+            f.write('# Please submit bugfixes or comments via http://bugs.opensuse.org/\n')
+            f.write('#\n')
+            f.write('\n')
+            f.write('\n')
+            f.write('Name:           python3-{}\n'.format(name))
+            f.write('Version:        {}\n'.format(version))
+            f.write('Release:        0\n')
+            f.write('Summary:        \n')
+            f.write('License:        \n')
+            f.write('Group:          Development/Languages/Python\n')
+            f.write('Url:            \n')
+            f.write(
+                'Source:         https://files.pythonhosted.org/packages/source/{}/{}/{}-%{{version}}{}\n'.format(name[
+                    0], name, name, ending))
+            f.write('BuildRequires:  python3-devel\n')
+            f.write('BuildRequires:  python3-setuptools\n')
+            f.write('BuildRoot:      %{_tmppath}/%{name}-%{version}-build\n')
+            f.write('BuildArch:      noarch\n')
+            f.write('\n')
+            f.write('%description\n')
+            f.write('\n')
+            f.write('\n')
+            f.write('%prep\n')
+            f.write('%setup -q -n {}-%{{version}}\n'.format(name))
+            f.write('\n')
+            f.write('%build\n')
+            f.write('python3 setup.py build\n')
+            f.write('\n')
+            f.write('%install\n')
+            f.write('python3 setup.py install --prefix=%{_prefix} --root=%{buildroot}\n')
+            f.write('\n')
+            f.write('%files\n')
+            f.write('%defattr(-,root,root,-)\n')
+            f.write('%{python3_sitelib}/*\n')
+            f.write('%{{_bindir}}/{}\n'.format(name))
+            f.write('%doc README.rst\n')
+            f.write('\n')
+            f.write('%changelog\n')
+
     def save(self, arg):
         """Save current packages, so that we can restart the program later."""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
