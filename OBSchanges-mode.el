@@ -1,4 +1,7 @@
 (defun changelog-format-entry ()
+  "Format a changelog entry as a level 1 item starting with a '  *'.
+  Also: replace `` quotes with a normal quote, delete blank lines after entry,
+        add single blank line at end of section"
   (interactive)
   (beginning-of-line)
   (delete-whitespace-rectangle (point) (line-end-position) nil)
@@ -9,9 +12,19 @@
   (insert "  * ")
   (move-end-of-line nil)
   (fill-region (line-beginning-position) (line-end-position))
-  (forward-line 1))
+  (forward-line 1)
+  (if (looking-at "[[:blank:]]*\n")
+      (delete-blank-lines))
+  (if (looking-at "- changes from version ")
+      (insert "\n"))
+  (if (looking-at "-------")
+      (insert "\n"))
+  )
 
 (defun changelog-format-entry2 ()
+  "Format a changelog entry as a level 2 item starting with a '    +'.
+  Also: replace `` quotes with a normal quote, delete blank lines after entry,
+        add single blank line at end of section"
   (interactive)
   (beginning-of-line)
   (delete-whitespace-rectangle (point) (line-end-position) nil)
@@ -22,7 +35,14 @@
   (insert "    + ")
   (move-end-of-line nil)
   (fill-region (line-beginning-position) (line-end-position))
-  (forward-line 1))
+  (forward-line 1)
+    (if (looking-at "[[:blank:]]*\n")
+      (delete-blank-lines))
+  (if (looking-at "- changes from version ")
+      (insert "\n"))
+  (if (looking-at "-------")
+      (insert "\n"))
+  )
 
 (defun changelog-insert-version ()
   (interactive)
