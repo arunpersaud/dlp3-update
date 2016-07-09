@@ -7,7 +7,7 @@
   (delete-whitespace-rectangle (point) (line-end-position) nil)
   (if (looking-at "[-+*] ")
       (delete-char 2))
-  (if (looking-at "[a-z0-9]\{40\} ")
+  (if (looking-at "[[:alnum:]]\\{40\\}[[:blank:]]*")
       (delete-char 41))
   (replace-string "``" "\"" nil (point) (line-end-position))
   (beginning-of-line)
