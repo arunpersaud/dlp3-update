@@ -385,6 +385,7 @@
     "python3-urllib3": "see tar ball",
     "python3-urwid": "see tar ball",
     "python3-vcversioner": "git clone https://github.com/habnabit/vcversioner.git",
+    "python3-versioneer": "git clone https://github.com/warner/python-versioneer.git",
     "python3-veusz": "http://home.gna.org/veusz/releasenotes/",
     "python3-vine": "see Changelog in tar-ball",
     "python3-virtualenv": "https://virtualenv.pypa.io/en/latest/changes.html",
