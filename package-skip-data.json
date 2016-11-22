@@ -24,6 +24,7 @@
     "python3-louis": "-",
     "python3-mock-doc": "-",
     "python3-numpy-doc": "-",
+    "python3-pandas-doc": "-",
     "python3-pbr-doc": "-",
     "python3-persistent-doc": "-",
     "python3-psycopg2-doc": "-",
@@ -35,7 +36,9 @@
     "python3-pyserial-doc": "-",
     "python3-pytest-doc": "-",
     "python3-testtools-doc": "-",
+    "python3-tox-doc": "-",
     "python3-virtualenv-doc": "-",
     "python3-xlwt-doc": "-",
-    "python3-zope.component-doc": "-"
+    "python3-zope.component-doc": "-",
+    "python3-zope.deprecation-doc": "-"
 }
