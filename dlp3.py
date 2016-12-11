@@ -812,9 +812,9 @@ class myCMD(cmd.Cmd):
                         break
             if version1 == natsort.natsorted([version1, version2])[0]:
                 print(p, "local: ", version1, "  dlp3: ", version2, dlp3_web_branch+p)
-        print("found {} up to date packages,".format(good) +
+        print("Found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
-              "and {} packages that need an update,".format(need) +
+              "and {} packages that need an update,\n".format(need) +
               " {} without a patch,".format(neednopatch) +
               " {} pending SR".format(len(self.pending_requests)))
 
