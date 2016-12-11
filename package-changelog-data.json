@@ -260,7 +260,7 @@
     "python3-pandas": "http://pandas.pydata.org/pandas-docs/stable/whatsnew.html",
     "python3-papyrus": "see Changelog in tar-ball",
     "python3-param": "http://ioam.github.io/param/#id1",
-    "python3-paramiko": "https://github.com/paramiko/paramiko/tree/5b1b13c2fb48ac55d64022212bf132b8c01ce0c7/sites/www",
+    "python3-paramiko": "http://www.paramiko.org/changelog.html",
     "python3-partd": "https://github.com/dask/partd/commits/master",
     "python3-path.py": "see tar ball",
     "python3-patsy": "see tar ball",
