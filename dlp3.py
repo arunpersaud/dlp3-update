@@ -97,7 +97,7 @@ def print_list(l, links=False):
         print("list is empty")
     else:
         print("packages:")
-        for p in l:
+        for p in sorted(l):
             if links:
                 print("  ", p, dlp3_web_branch+p)
             else:
@@ -105,9 +105,7 @@ def print_list(l, links=False):
 
 
 def my_submit(package):
-    print("―"*(len(package)+27))
     print("    ", package)
-    print("")
 
     worked = None
     output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package)) +
@@ -121,13 +119,11 @@ def my_submit(package):
             id = line.split()[-1]
             link = "https://build.opensuse.org/request/show/"+str(id)
             print("   link: ", link)
-            print("―"*(len(package)+27))
 
     return worked
 
 
 def my_cleanup(package):
-    print("―"*(len(package)+16))
     print("updating dlp3 checkout for", package)
     try:
         output = subprocess.check_output('cd {} && osc up'.
@@ -139,7 +135,6 @@ def my_cleanup(package):
                                          format(dlp3_path, package),
                                          shell=True)
     print(output.decode('ascii'))
-    print("―"*(len(package)+16))
 
 
 def my_update(package, d):
@@ -438,8 +433,10 @@ class myCMD(cmd.Cmd):
                     p != ".osc" and
                     p not in existing]
 
+        print("―"*27)
         fut = [pool.submit(my_cleanup, p) for p in packages]
         concurrent.futures.wait(fut)
+        print("―"*27)
 
         for p in packages:
             print("rm -rf", os.path.join(dlp3_branch_path, p))
@@ -828,15 +825,17 @@ class myCMD(cmd.Cmd):
 
     def do_submit(self, arg):
         """Create SR for all packages that build correctly."""
-        print("submitting all the good packages")
         worked = []
         if arg.startswith('-f'):
             to_submit = arg.split()[1:]
         else:
+            print("submitting all the good packages")
             to_submit = self.good_packages
+        print("―"*27)
         fut = [pool.submit(my_submit, p) for p in to_submit]
         concurrent.futures.wait(fut)
         worked = [f.result() for f in fut]
+        print("―"*27)
 
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
