@@ -237,6 +237,7 @@
     "python3-mccabe": "https://github.com/PyCQA/mccabe/blob/master/README.rst",
     "python3-mistune": "https://github.com/lepture/mistune/blob/master/CHANGES.rst",
     "python3-mock": "tar-ball",
+    "python3-more-itertools": "https://pypi.python.org/pypi/more-itertools",
     "python3-moretools": "hg clone https://bitbucket.org/userzimmermann/python-moretools",
     "python3-mpi4py": "https://bitbucket.org/mpi4py/mpi4py/src",
     "python3-msgpack-python": "https://github.com/msgpack/msgpack-python/blob/master/ChangeLog.rst",
