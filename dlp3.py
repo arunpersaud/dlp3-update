@@ -266,6 +266,7 @@ class myCMD(cmd.Cmd):
         self.good_lasttotal = 0
         self.bad_lasttotal = 0
         self.longestname = 0
+        self.pending_requests = []
 
     def do_quit(self, arg):
         self.save('silent')
@@ -468,6 +469,9 @@ class myCMD(cmd.Cmd):
     def do_bad(self, arg):
         print_list(self.bad_packages)
 
+    def do_pending(self, arg):
+        print_list(self.pending_requests)
+
     def check_package(self, p):
         try:
             output = subprocess.check_output("cd {} && osc results".
@@ -583,6 +587,28 @@ class myCMD(cmd.Cmd):
         """Give status information on enter"""
         self.do_status('')
 
+    def do_check_pending(self, arg=None):
+        print("Checking pending SR")
+        try:
+            output = subprocess.check_output("osc my", shell=True)
+        except subprocess.CalledProcessError:
+            return
+        output = output.decode('ascii')
+
+        self.pending_requests = []
+        for line in output.split('\n\n'):
+            if "State:new" in line:
+                tmp = line.split()
+                nr = tmp[0]
+                author = tmp[2][3:]  # remove 'By:'
+                fromrepo = tmp[5]
+                fromrepo, package = fromrepo.split("/")
+                package = package.split('@')[0]
+                torepo = tmp[7]
+                if torepo == "devel:languages:python3":
+                    print(nr, author, fromrepo, package)
+                    self.pending_requests.append(package)
+
     def do_update(self, arg):
         """checkout these package to local branch, download new tar-ball,
            update changes and spec file
@@ -618,6 +644,12 @@ class myCMD(cmd.Cmd):
         else:
             packages = glob.glob(os.path.join(dlp3_path, "python3*"))
             packages = [os.path.basename(p) for p in packages]
+
+        # skip pending SR
+        if not self.pending_requests:
+            self.do_check_pending()
+
+        packages = [p for p in packages if p not in self.pending_requests]
 
         # packages I'm already preparing an update for
         PENDING = [i.split("/")[-1] for i in
@@ -783,7 +815,8 @@ class myCMD(cmd.Cmd):
         print("found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,".format(need) +
-              " {} without a patch".format(neednopatch))
+              " {} without a patch,".format(neednopatch) +
+              " {} pending SR".format(len(self.pending_requests)))
 
     def do_remove(self, args):
         """remove package form all the internal lists"""
