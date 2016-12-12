@@ -781,11 +781,11 @@ class myCMD(cmd.Cmd):
                 patchstr = colored("nopatch", 'green') if not patch else "patch"
                 if p in logs:
                     if logs[p].startswith('http'):
-                        changelog = "+  "
+                        changelog = "h  "
                     elif logs[p].startswith('git clone'):
-                        changelog = "*  "
+                        changelog = "g  "
                     else:
-                        changelog = "%  "
+                        changelog = "t  "
                 else:
                     changelog = "   "  # no changelog link available
                 # length formatting doesn't work with color-escape
@@ -817,7 +817,6 @@ class myCMD(cmd.Cmd):
                         break
             if version1 == natsort.natsorted([version1, version2])[0]:
                 print(p, "local: ", version1, "  dlp3: ", version2, dlp3_web_branch+p)
-        print(" + http     * git      % tar-ball")
         print("Found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,\n".format(need) +
