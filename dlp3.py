@@ -111,7 +111,7 @@ def my_submit(package):
     output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package)) +
                                      ' && osc submitrequest --yes -m "update to latest version"',
                                      shell=True)
-    output = output.decode('ascii')
+    output = output.decode('utf8')
     for line in output.split('\n'):
         print(line)
         if line.startswith("created request id"):
@@ -134,7 +134,7 @@ def my_cleanup(package):
         output = subprocess.check_output('cd {} && osc co {}'.
                                          format(dlp3_path, package),
                                          shell=True)
-    print(output.decode('ascii'))
+    print(output.decode('utf8'))
 
 
 def my_update(package, d):
@@ -421,7 +421,7 @@ class myCMD(cmd.Cmd):
         """
         try:
             output = subprocess.check_output(['osc', 'list', os.path.basename(myCMD.dir)])
-            existing = output.decode('ascii').split('\n')
+            existing = output.decode('utf8').split('\n')
         except:
             # if no packages the home-branch on osc than the command will fail
             # in this case we can remove all
@@ -478,7 +478,7 @@ class myCMD(cmd.Cmd):
             # package doesn't exist anymore, return all zeros and remove from list in caller
             # since this is executed in a thread and won't udate the real class in the main thread
             return p, 0, 0, 0
-        output = output.decode('ascii')
+        output = output.decode('utf8')
         good, bad, building = 0, 0, 0
         for line in output.split('\n'):
             try:
@@ -590,7 +590,7 @@ class myCMD(cmd.Cmd):
             output = subprocess.check_output("osc my", shell=True)
         except subprocess.CalledProcessError:
             return
-        output = output.decode('ascii')
+        output = output.decode('utf8')
 
         self.pending_requests = []
         for line in output.split('\n\n'):
