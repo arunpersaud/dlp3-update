@@ -886,7 +886,7 @@ class myCMD(cmd.Cmd):
             f.write('#\n')
             f.write('# spec file for package python3-{}\n'.format(name))
             f.write('#\n')
-            f.write('# Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.\n')
+            f.write('# Copyright (c) {} SUSE LINUX GmbH, Nuernberg, Germany.\n'.format(datetime.now().year))
             f.write('#\n')
             f.write('# All modifications and additions to the file contributed by third parties\n')
             f.write('# remain the property of their copyright owners, unless otherwise agreed\n')
