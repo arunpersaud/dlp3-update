@@ -203,6 +203,13 @@ def my_update(package, d):
                             # add changelog entry
                             changelog += "- specfile:\n"
                             changelog += "  * update copyright year\n\n"
+                    if line.startswith("Source"):
+                        if "https://pypi.python.org/packages/" in line:
+                            tmp = line.split('/')
+                            source = line.split(':')[0]
+                            if len(tmp[4]) == 2:
+                                # using direct download link, need to update it
+                                line = "{}:         {}".format(source, url)
                     input.write(line)
         except FileNotFoundError:
             pass
