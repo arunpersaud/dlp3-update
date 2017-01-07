@@ -128,6 +128,7 @@ def my_cleanup(package):
     try:
         output = subprocess.check_output('cd {} && osc up'.
                                          format(os.path.join(dlp3_path, package)),
+                                         stderr=subprocess.DEVNULL,
                                          shell=True)
     except:
         # package didn't exist yet, create a new checkout
