@@ -441,6 +441,10 @@ class myCMD(cmd.Cmd):
                     p != ".osc" and
                     p not in existing]
 
+        if len(packages) == 0:
+            print("Nothing to clean up")
+            return
+
         print("―"*27)
         fut = [pool.submit(my_cleanup, p) for p in packages]
         concurrent.futures.wait(fut)
@@ -455,8 +459,6 @@ class myCMD(cmd.Cmd):
             if p in self.bad_packages:
                 self.bad_packages.remove(p)
 
-        if len(packages) == 0:
-            print("Nothing to clean up")
         self.save('silent')
 
     def do_list(self, arg):
