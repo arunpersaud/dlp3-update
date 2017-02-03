@@ -604,6 +604,8 @@ class myCMD(cmd.Cmd):
 
         self.pending_requests = []
         for line in output.split('\n\n'):
+            if "add_role" in line:
+                continue
             if "State:new" in line:
                 tmp = line.split()
                 nr = tmp[0]
