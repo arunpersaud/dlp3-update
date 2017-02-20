@@ -6,8 +6,9 @@
     "python3-Beaker": "http://beaker.readthedocs.org/en/latest/changes.html",
     "python3-Biggus": "https://github.com/SciTools/biggus/releases",
     "python3-Bottleneck": "http://berkeleyanalytics.com/bottleneck/release.html",
+    "python3-CairoSVG": "see NEWS.txt in tar-ball",
     "python3-Chameleon": "https://github.com/malthe/chameleon/blob/master/CHANGES.rst",
-    "python3-CherryPy": "https://github.com/cherrypy/cherrypy/blob/master/CHANGES.txt",
+    "python3-CherryPy": "https://github.com/cherrypy/cherrypy/blob/master/CHANGES.rst",
     "python3-CommonMark": "https://github.com/rtfd/CommonMark-py/blob/master/CHANGELOG.md",
     "python3-Cython": "https://github.com/cython/cython/blob/master/CHANGES.rst",
     "python3-DataShape": "http://datashape.readthedocs.org/en/latest/releases.html",
@@ -422,6 +423,7 @@
     "python3-xlrd": "https://github.com/python-excel/xlrd/commits/master",
     "python3-xlwt": "docs/changes.rst in tar ball",
     "python3-xray": "https://github.com/xray/xray/blob/master/doc/whats-new.rst",
+    "python3-yamllint": "git clone https://github.com/adrienverge/yamllint.git",
     "python3-yapf": "https://github.com/google/yapf/blob/master/CHANGELOG",
     "python3-yg.lockfile": "https://bitbucket.org/jaraco/yg.lockfile/src",
     "python3-zc.lockfile": "https://pypi.python.org/pypi/zc.lockfile",
@@ -440,5 +442,6 @@
     "python3-zope.testing": "https://pypi.python.org/pypi/zope.testing",
     "python3-zope.testrunner": "https://pypi.python.org/pypi/zope.testrunner",
     "pyton3-blessings": "https://pypi.python.org/pypi/blessings",
+    "pyton3-setuptool-git": "https://pypi.python.org/pypi/setuptools-git",
     "pytyhon3-django-nose": "https://github.com/django-nose/django-nose/blob/master/README.rst"
 }
