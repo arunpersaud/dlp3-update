@@ -4,6 +4,8 @@
         add single blank line at end of section"
   (interactive)
   (beginning-of-line)
+  (while (looking-at "[[:blank:]]*\n")
+      (kill-line))
   (delete-whitespace-rectangle (point) (line-end-position) nil)
   (if (looking-at "[-+*] ")
       (delete-char 2))
@@ -33,12 +35,24 @@
 
 (defun changelog-insert-version ()
   (interactive)
+  (save-excursion
+    (forward-line -1)
+    (move-end-of-line nil)
+    (insert "\n")
+    (forward-line -1)
+    (if (looking-at "[[:blank:]]*\n")
+	(delete-blank-lines)))
   (beginning-of-line)
   (delete-whitespace-rectangle (point) (line-end-position) nil)
+  ; handle lines like v10.0.1 automatically
+  (if (looking-at "v[[:digit:]]*")
+      (delete-char 1))
   (insert "- changes from version ")
   (end-of-line)
   (insert ":")
-  (forward-line 1))
+  (forward-line 1)
+  (if (looking-at "[[:blank:]]*\n")
+      (delete-blank-lines)))
 
 
 ;;;###autoload
