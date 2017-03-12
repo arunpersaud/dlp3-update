@@ -680,6 +680,9 @@ class myCMD(cmd.Cmd):
                 print("Error with package", path, p)
                 print("  perhaps this has been removed from dlp3?")
                 print("  (in which case you need to update the local copy)")
+                # to keep items in sync, we still need to add something to the lists
+                specfiles.append(None)
+                patchfiles.append(None)
 
         print("checking packages:")
 
@@ -688,6 +691,9 @@ class myCMD(cmd.Cmd):
         for s, p in zip(specfiles, packages):
             name, version, url = None, None, None
             # get some information out of the specfiles
+            if s is None:
+                name_version.append([None, None, None, None])
+                continue
             with open(s, 'r') as f:
                 for l in f:
                     if l.startswith("Version"):
@@ -745,6 +751,8 @@ class myCMD(cmd.Cmd):
             p = os.path.basename(pp)
             old = d[0]
             new = d[1]
+            if old is None:
+                continue
             # if git or hg in old, just check for version updates
             if "+hg" in old or "+git" in old:
                 old = old.split("+")[0]
