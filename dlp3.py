@@ -493,7 +493,10 @@ class myCMD(cmd.Cmd):
         for line in output.split('\n'):
             try:
                 out = line.split()
-                distro, system, pname, status = out
+                if len(out) == 4:
+                    distro, system, pname, status = out
+                else:
+                    distro, system, status = out
             except:
                 continue
 
