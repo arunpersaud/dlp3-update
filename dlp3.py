@@ -493,7 +493,7 @@ class myCMD(cmd.Cmd):
         for line in output.split('\n'):
             try:
                 out = line.split()
-                distro, system, status = out
+                distro, system, pname, status = out
             except:
                 continue
 
@@ -614,7 +614,7 @@ class myCMD(cmd.Cmd):
                 fromrepo, package = fromrepo.split("/")
                 package = package.split('@')[0]
                 torepo = tmp[7]
-                if torepo == "devel:languages:python3":
+                if torepo == "devel:languages:python":
                     print(nr, author, fromrepo, package)
                     self.pending_requests.append(package)
 
@@ -651,7 +651,7 @@ class myCMD(cmd.Cmd):
         if arg != "":
             packages = arg.split()
         else:
-            packages = glob.glob(os.path.join(dlp3_path, "python3*"))
+            packages = glob.glob(os.path.join(dlp3_path, "python*"))
             packages = [os.path.basename(p) for p in packages]
 
         # skip pending SR
@@ -678,7 +678,7 @@ class myCMD(cmd.Cmd):
                 patchfiles.append(p)
             except:
                 print("Error with package", path, p)
-                print("  perhaps this has been removed from dlp3?")
+                print("  perhaps this has been removed from dlp?")
                 print("  (in which case you need to update the local copy)")
                 # to keep items in sync, we still need to add something to the lists
                 specfiles.append(None)
@@ -695,15 +695,18 @@ class myCMD(cmd.Cmd):
                 name_version.append([None, None, None, None])
                 continue
             with open(s, 'r') as f:
+                singlespec = False
                 for l in f:
-                    if l.startswith("Version"):
+                    if not version and l.startswith("Version:"):
                         version = l.split(":")[1].strip()
-                    if l.startswith("Source") and "version" in l:
+                    if not url and l.startswith("Source:") and "version" in l:
                         url = l.split(":", maxsplit=1)[1].strip()
                         parts = l.split("/")
                         if len(parts) > 6 and (parts[2] == "pypi.python.org" or parts[2] == "files.pythonhosted.org"):
                             name = parts[6]
-                    if version and name:
+                    if not singlespec and "python_module" in l:
+                        singlespec = True
+                    if version and name and singlespec:
                         break
             # fix the names for some packages that are not on pypi
             if name is None:
@@ -713,7 +716,10 @@ class myCMD(cmd.Cmd):
             specialnames = {'usb': 'pyusb', 'xdg': 'pyxdg'}
             if name in specialnames:
                 name = specialnames[name]
-            name_version.append([name, version, url, p])
+            if singlespec:
+                name_version.append([name, version, url, p])
+            else:
+                name_version.append([None, None, None, None])
 
         clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
         client = xmlrpclib.MultiCall(clientpool)
@@ -823,7 +829,7 @@ class myCMD(cmd.Cmd):
                 s2 = glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0]
             except:
                 print("Error with package", path, p)
-                print("  perhaps this has been removed from dlp3?")
+                print("  perhaps this has been removed from dlp?")
                 print("  (in which case you need to update the local copy)")
             with open(s1, 'r') as f:
                 for l in f:
@@ -836,7 +842,7 @@ class myCMD(cmd.Cmd):
                         version2 = l.split(":")[1].strip()
                         break
             if version1 == natsort.natsorted([version1, version2])[0]:
-                print(p, "local: ", version1, "  dlp3: ", version2, dlp3_web_branch+p)
+                print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
         print("Found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,\n".format(need) +
@@ -891,20 +897,20 @@ class myCMD(cmd.Cmd):
         print('got version:', version)
         print('got ending:', ending)
         subprocess.check_output('cd {}'.format(myCMD.dir) +
-                                ' && osc mkpac python3-{}'.format(name),
+                                ' && osc mkpac python-{}'.format(name),
                                 shell=True)
         try:
             r = requests.get(url, verify=True)
             # use absolut url to make it thread-safe
-            with open(os.path.join(dlp3_branch_path, 'python3-{}'.format(name), tarball), 'wb') as f:
+            with open(os.path.join(dlp3_branch_path, 'python-{}'.format(name), tarball), 'wb') as f:
                 f.write(r.content)
             print("download successful")
         except:
             print("couldn't download package; url=", url)
 
-        with open(os.path.join(dlp3_branch_path, 'python3-{}'.format(name), 'python3-{}.spec'.format(name)), 'w') as f:
+        with open(os.path.join(dlp3_branch_path, 'python-{}'.format(name), 'python-{}.spec'.format(name)), 'w') as f:
             f.write('#\n')
-            f.write('# spec file for package python3-{}\n'.format(name))
+            f.write('# spec file for package python-{}\n'.format(name))
             f.write('#\n')
             f.write('# Copyright (c) {} SUSE LINUX GmbH, Nuernberg, Germany.\n'.format(datetime.now().year))
             f.write('#\n')
@@ -977,6 +983,7 @@ class myCMD(cmd.Cmd):
                 if p not in packs:
                     print("Package {} doesn't exist anymore... remove it from list.")
                     self.packages.remove(p)
+
 
 A = myCMD()
 A.load('silent')
