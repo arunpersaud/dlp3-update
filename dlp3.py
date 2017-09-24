@@ -504,10 +504,6 @@ class myCMD(cmd.Cmd):
             if status.endswith("*"):
                 status = status[:-1]
 
-            # lots of packages seem to be unresolvable in openSUSE_Leap_42.1, just ignore it
-            if distro == "openSUSE_Leap_42.1" and status == "unresolvable":
-                continue
-
             # do some counting
             # the '' exists for example when there is a problem with
             # OBS and items don't get scheduled
