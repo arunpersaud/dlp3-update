@@ -519,7 +519,7 @@ class myCMD(cmd.Cmd):
                 print(colored("unknown status", 'red'), status)
 
         if building == 0:
-            if bad == 0:
+            if bad == 0 and good > 0:
                 self.good += 1
                 self.good_packages.append(p)
             else:
