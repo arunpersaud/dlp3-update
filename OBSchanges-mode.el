@@ -23,15 +23,17 @@
       (insert "\n"))
   (if (looking-at "-------")
       (insert "\n"))
-  )
+  (recenter))
 
 (defun changelog-format-level1 ()
   (interactive)
-  (changelog-format-entry "  * "))
+  (changelog-format-entry "  * ")
+  (recenter))
 
 (defun changelog-format-level2 ()
   (interactive)
-  (changelog-format-entry "    + "))
+  (changelog-format-entry "    + ")
+  (recenter))
 
 (defun changelog-insert-version ()
   (interactive)
