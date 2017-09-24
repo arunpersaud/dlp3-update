@@ -40,6 +40,7 @@
     "python-Pygments": "see CHANGES in tar-ball",
     "python-SPARQLWrapper": "https://github.com/RDFLib/sparqlwrapper/blob/master/ChangeLog.txt",
     "python-SQLAlchemy": "http://docs.sqlalchemy.org/en/latest/changelog",
+    "python-SQLAlchemy-Utils": "https://github.com/kvesteri/sqlalchemy-utils/blob/master/CHANGES.rst",
     "python-SecretStorage": "https://github.com/mitya57/secretstorage/blob/master/changelog",
     "python-Shapely": "see tar ball",
     "python-Sphinx": "https://github.com/sphinx-doc/sphinx/blob/master/CHANGES",
@@ -76,6 +77,7 @@
     "python-biplist": "https://bitbucket.org/wooster/biplist/src",
     "python-bitstring": "https://github.com/scott-griffiths/bitstring/releases",
     "python-blaze": "https://github.com/blaze/blaze/tree/master/docs/source/whatsnew",
+    "python-blessings": "https://pypi.python.org/pypi/blessings",
     "python-blinker": "http://pythonhosted.org/blinker/",
     "python-blosc": "https://github.com/Blosc/python-blosc",
     "python-bloscpack": "https://pypi.python.org/pypi/bloscpack/0.11.0",
@@ -133,7 +135,7 @@
     "python-django-haystack": "https://github.com/django-haystack/django-haystack/releases",
     "python-django-markupfield": "https://github.com/jamesturk/django-markupfield/blob/master/CHANGELOG",
     "python-django-mptt": "https://github.com/django-mptt/django-mptt/blob/master/docs/upgrade.rst",
-    "python-django-nose": "https://pypi.python.org/pypi/django-nose",
+    "python-django-nose": "https://github.com/django-nose/django-nose/blob/master/README.rst",
     "python-django-picklefield": "see tar ball",
     "python-django-reversion": "https://github.com/etianen/django-reversion/blob/master/CHANGELOG.rst",
     "python-django-rosetta": "https://github.com/mbi/django-rosetta/blob/develop/CHANGES",
@@ -368,6 +370,7 @@
     "python-secretary": "https://github.com/christopher-ramirez/secretary",
     "python-selenium": "https://github.com/SeleniumHQ/selenium/blob/master/py/CHANGES",
     "python-setproctitle": "see tar-ball",
+    "python-setuptool-git": "https://pypi.python.org/pypi/setuptools-git",
     "python-setuptools": "https://github.com/pypa/setuptools/blob/master/CHANGES.rst",
     "python-setuptools_scm": "https://github.com/pypa/setuptools_scm/blob/master/CHANGELOG.rst",
     "python-sh": "https://github.com/amoffat/sh/blob/master/CHANGELOG.md",
@@ -443,8 +446,5 @@
     "python-zope.proxy": "https://pypi.python.org/pypi/zope.proxy",
     "python-zope.security": "https://pypi.python.org/pypi/zope.security",
     "python-zope.testing": "https://pypi.python.org/pypi/zope.testing",
-    "python-zope.testrunner": "https://pypi.python.org/pypi/zope.testrunner",
-    "python-blessings": "https://pypi.python.org/pypi/blessings",
-    "python-setuptool-git": "https://pypi.python.org/pypi/setuptools-git",
-    "python-django-nose": "https://github.com/django-nose/django-nose/blob/master/README.rst"
+    "python-zope.testrunner": "https://pypi.python.org/pypi/zope.testrunner"
 }
