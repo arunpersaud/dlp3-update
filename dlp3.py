@@ -91,15 +91,17 @@ def get_logs():
     return logs
 
 
-def print_list(l, links=False):
+def print_list(l, title="packages:", links=False):
     """print a list of packages"""
     if len(l) == 0:
         print("list is empty")
     else:
-        print("packages:")
+        print(title)
+        width = max([len(p) for p in l])
         for p in sorted(l):
             if links:
-                print("  ", p, dlp3_web_branch+p)
+                print("  {0:<{width}} {1}".format(p, dlp3_web_branch+p,
+                                                  width=width))
             else:
                 print("  ", p)
 
@@ -462,22 +464,22 @@ class myCMD(cmd.Cmd):
         self.save('silent')
 
     def do_list(self, arg):
-        print_list(self.packages)
+        print_list(self.good_packages+self.packages+self.bad_packages)
 
     def do_links(self, arg):
-        print_list(self.packages, links=True)
+        print_list(self.good_packages+self.packages+self.bad_packages, links=True)
 
     def do_listdev(self, arg):
-        print_list(self.dev_packages)
+        print_list(self.dev_packages, title="dev:")
 
     def do_good(self, arg):
-        print_list(self.good_packages)
+        print_list(self.good_packages, title="good:")
 
     def do_bad(self, arg):
-        print_list(self.bad_packages)
+        print_list(self.bad_packages, title="bad:")
 
     def do_pending(self, arg):
-        print_list(self.pending_requests)
+        print_list(self.pending_requests, title="pending:")
 
     def check_package(self, p):
         try:
@@ -522,7 +524,7 @@ class myCMD(cmd.Cmd):
             if bad == 0 and good > 0:
                 self.good += 1
                 self.good_packages.append(p)
-            else:
+            elif bad > 0:
                 self.bad += 1
                 self.bad_packages.append(p)
         else:
@@ -566,14 +568,18 @@ class myCMD(cmd.Cmd):
 
             # add link in case something went wrong
             link = dlp3_web_branch+p if bad > 0 else ""
-            print("{:<{length}}    {:2}  {:2}   {:2}    {link}".
-                  format(p, good,
-                         " "+colored(bad, 'red') if bad > 0 else bad,
-                         building, length=self.longestname, link=link))
+            # colored messes up the alignment, so we do this by hand over here
+            if bad < 10:
+                bad_out = " "+colored(bad, 'red') if bad > 0 else bad
+            else:
+                bad_out = colored(bad, 'red') if bad > 0 else bad
+            print("{:<{length}}    {: >2}  {}   {: >2}    {link}".
+                  format(p, good, bad_out, building,
+                         length=self.longestname, link=link))
             self.good_total += good
             self.bad_total += bad
         print("―"*(self.longestname+16))
-        print("{:<{length}}    {:+2}  {:+2}".
+        print("{:<{length}}    {: >+2}  {: >+2}".
               format("ΔΣ", self.good_total-self.good_lasttotal,
                      self.bad_total-self.bad_lasttotal, length=self.longestname))
 
@@ -594,7 +600,7 @@ class myCMD(cmd.Cmd):
         self.do_status('')
 
     def do_check_pending(self, arg=None):
-        print("Checking pending SR")
+        print("Checking my pending SR")
         try:
             output = subprocess.check_output("osc my", shell=True)
         except subprocess.CalledProcessError:
@@ -614,10 +620,11 @@ class myCMD(cmd.Cmd):
                 package = package.split('@')[0]
                 torepo = tmp[7]
                 if torepo == "devel:languages:python":
-                    print(nr, author, fromrepo, package)
+                    print("{} {:<25} {:<20} {}".format(nr, package, author, fromrepo))
                     self.pending_requests.append(package)
 
         # check for pending request in dlp
+        print("Checking pending SR in dlp")
         try:
             output = subprocess.check_output(
                 'osc request list -s "new,review" devel:languages:python', shell=True)
@@ -640,7 +647,7 @@ class myCMD(cmd.Cmd):
                 package = package.split('@')[0]
                 torepo = tmp[7]
                 if torepo == "devel:languages:python":
-                    print(nr, author, fromrepo, package)
+                    print("{} {:<25} {:<20} {}".format(nr, package, author, fromrepo))
                     self.pending_requests.append(package)
 
     def do_update(self, arg):
