@@ -618,6 +618,32 @@ class myCMD(cmd.Cmd):
                     print(nr, author, fromrepo, package)
                     self.pending_requests.append(package)
 
+        # check for pending request in dlp
+        try:
+            output = subprocess.check_output(
+                'osc request list -s "new,review" devel:languages:python', shell=True)
+        except subprocess.CalledProcessError:
+            return
+        output = output.decode('utf8')
+
+        for line in output.split('\n\n'):
+            if "add_role" in line:
+                continue
+            # skip request that e.g. go to Factory
+            if "-> devel:languages:python" not in line:
+                continue
+            if "submit:" in line:
+                tmp = line.split()
+                nr = tmp[0]
+                author = tmp[2][3:]  # remove 'By:'
+                fromrepo = tmp[5]
+                fromrepo, package = fromrepo.split("/")
+                package = package.split('@')[0]
+                torepo = tmp[7]
+                if torepo == "devel:languages:python":
+                    print(nr, author, fromrepo, package)
+                    self.pending_requests.append(package)
+
     def do_update(self, arg):
         """checkout these package to local branch, download new tar-ball,
            update changes and spec file
