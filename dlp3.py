@@ -574,7 +574,8 @@ class myCMD(cmd.Cmd):
             link = dlp3_web_branch+p if bad > 0 else ""
             # colored messes up the alignment, so we do this by hand over here
             if bad < 10:
-                bad_out = " "+colored(bad, 'red') if bad > 0 else bad
+                bad_out = " "
+                bad_out += colored(bad, 'red') if bad > 0 else str(bad)
             else:
                 bad_out = colored(bad, 'red') if bad > 0 else bad
             print("{:<{length}}    {: >2}  {}   {: >2}    {link}".
