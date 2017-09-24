@@ -502,6 +502,10 @@ class myCMD(cmd.Cmd):
             except:
                 continue
 
+            # no python3, so we get many errors here
+            if distro == "SLE_11_SP4" and status == "unresolvable":
+                continue
+
             # unify output a bit
             if status.endswith("*"):
                 status = status[:-1]
