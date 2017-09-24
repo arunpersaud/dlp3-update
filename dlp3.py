@@ -997,7 +997,7 @@ class myCMD(cmd.Cmd):
     def save(self, arg):
         """Save current packages, so that we can restart the program later."""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
-            json.dump(self.packages, f, indent=4, sort_keys=True)
+            json.dump(self.packages+self.good_packages+self.bad_packages, f, indent=4, sort_keys=True)
             if arg != 'silent':
                 print("Saved package list for next run. Use 'load' to read the list back")
 
