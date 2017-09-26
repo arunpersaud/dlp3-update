@@ -546,6 +546,7 @@ class myCMD(cmd.Cmd):
         self.good_total = 0
         self.bad_total = 0
         tocheck = self.good_packages + self.bad_packages + self.packages
+        tocheck = [i for i in tocheck if i not in self.pending_requests]
         self.good_packages = []
         self.bad_packages = []
         self.longestname = max([len(p) for p in tocheck]) if len(tocheck) > 0 else 0
