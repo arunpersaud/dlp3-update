@@ -908,6 +908,8 @@ class myCMD(cmd.Cmd):
         worked = [f.result() for f in fut]
         print("―"*27)
 
+        for w in worked:
+            self.pending_requests.append(w)
         self.good_packages = [p for p in self.good_packages
                               if p not in worked]
 
