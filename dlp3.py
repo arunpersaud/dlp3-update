@@ -481,11 +481,16 @@ class myCMD(cmd.Cmd):
     def do_pending(self, arg):
         print_list(self.pending_requests, title="pending:")
 
-    def check_package(self, p):
+    def check_package(self, p, orig=False):
         try:
-            output = subprocess.check_output("cd {} && osc results".
-                                             format(os.path.join(myCMD.dir, p)),
-                                             shell=True)
+            if orig:
+                output = subprocess.check_output("osc results devel:languages:python {}".
+                                                 format(p),
+                                                 shell=True)
+            else:
+                output = subprocess.check_output("cd {} && osc results".
+                                                 format(os.path.join(myCMD.dir, p)),
+                                                 shell=True)
         except subprocess.CalledProcessError:
             # package doesn't exist anymore, return all zeros and remove from list in caller
             # since this is executed in a thread and won't udate the real class in the main thread
@@ -552,15 +557,26 @@ class myCMD(cmd.Cmd):
         self.longestname = max([len(p) for p in tocheck]) if len(tocheck) > 0 else 0
 
         # parallel check
+        # local packages
         fut = [pool.submit(self.check_package, p) for p in tocheck]
         concurrent.futures.wait(fut)
+        # original package
+        fut_orig = [pool.submit(self.check_package, p, True) for p in tocheck]
+        concurrent.futures.wait(fut_orig)
+
         if self.longestname > 0:
-            print("{:^{length}} good bad building".
+            print("{:^{length}}   good     bad   building".
                   format("name", length=self.longestname+2))
 
         result = []
         for f in fut:
             result.append(f.result())
+
+        result_orig = {}
+        for f in fut_orig:
+            out = f.result()
+            result_orig[out[0]] = [out[1], out[2], out[3]]
+
         for p, good, bad, building in sorted(result):
             if good == 0 and bad == 0 and building == 0:
                 print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
@@ -579,13 +595,16 @@ class myCMD(cmd.Cmd):
                 bad_out += colored(bad, 'red') if bad > 0 else str(bad)
             else:
                 bad_out = colored(bad, 'red') if bad > 0 else bad
-            print("{:<{length}}    {: >2}  {}   {: >2}    {link}".
-                  format(p, good, bad_out, building,
+            print("{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {link}".
+                  format(p,
+                         good, result_orig[p][0],
+                         bad_out, result_orig[p][1],
+                         building, result_orig[p][2],
                          length=self.longestname, link=link))
             self.good_total += good
             self.bad_total += bad
-        print("―"*(self.longestname+16))
-        print("{:<{length}}    {: >+2}  {: >+2}".
+        print("―"*(self.longestname+28))
+        print("{:<{length}}    {: >+2}      {: >+2}".
               format("ΔΣ", self.good_total-self.good_lasttotal,
                      self.bad_total-self.bad_lasttotal, length=self.longestname))
 
