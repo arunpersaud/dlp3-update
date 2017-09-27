@@ -5,7 +5,7 @@
     "python-Babel": "see tar-file",
     "python-Beaker": "http://beaker.readthedocs.org/en/latest/changes.html",
     "python-Biggus": "https://github.com/SciTools/biggus/releases",
-    "python-Bottleneck": "http://berkeleyanalytics.com/bottleneck/release.html",
+    "python-Bottleneck": "https://github.com/kwgoodman/bottleneck/blob/master/RELEASE.rst",
     "python-CairoSVG": "see NEWS.txt in tar-ball",
     "python-Chameleon": "https://github.com/malthe/chameleon/blob/master/CHANGES.rst",
     "python-CherryPy": "https://github.com/cherrypy/cherrypy/blob/master/CHANGES.rst",
