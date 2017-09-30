@@ -523,13 +523,13 @@ class myCMD(cmd.Cmd):
                 # do some counting
                 # the '' exists for example when there is a problem with
                 # OBS and items don't get scheduled
-                if status in['failed', 'unresolvable']:
+                if status in['failed']:
                     orig_bad += 1
                 elif status in ['succeeded']:
                     orig_good += 1
                 elif status in ['scheduled', 'building', 'blocked', 'finished', 'signing', '']:
                     orig_building += 1
-                elif status in ['excluded', 'disabled']:
+                elif status in ['excluded', 'disabled', 'unresolvable']:
                     skip_status[p][distro].append(system)
                 else:
                     print(colored("unknown status", 'red'), status)
