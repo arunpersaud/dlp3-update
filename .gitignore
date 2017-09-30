@@ -1,2 +1,4 @@
 dlp3.conf
 *~
+package-blacklist.json
+package-whitelist.json

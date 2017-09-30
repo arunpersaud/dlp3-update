@@ -101,10 +101,13 @@ def get_blacklist():
     """
 
     SKIP = []
-    with open(blacklistfile, 'r') as f:
-        c = "".join(f.readlines())
-        if len(c) > 0:
-            SKIP = json.loads(c)
+    try:
+        with open(blacklistfile, 'r') as f:
+            c = "".join(f.readlines())
+            if len(c) > 0:
+                SKIP = json.loads(c)
+    except IOError:
+        pass
     return SKIP
 
 
@@ -116,10 +119,13 @@ def get_whitelist():
     """
 
     white = []
-    with open(whitelistfile, 'r') as f:
-        c = "".join(f.readlines())
-        if len(c) > 0:
-            white = json.loads(c)
+    try:
+        with open(whitelistfile, 'r') as f:
+            c = "".join(f.readlines())
+            if len(c) > 0:
+                white = json.loads(c)
+    except IOError:
+        pass
     return white
 
 
