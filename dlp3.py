@@ -67,6 +67,8 @@ try:
     bindir = os.path.dirname(os.path.realpath(__file__))
     logfile = os.path.join(bindir, 'package-changelog-data.json')
     skipfile = os.path.join(bindir, 'package-skip-data.json')
+    blacklistfile = os.path.join(bindir, 'package-blacklist.json')
+    whitelistfile = os.path.join(bindir, 'package-whitelist.json')
 except (TypeError, KeyError):
     print("ERROR: Path for dlp3 and branch not found in DEFAULT section")
     sys.exit(2)
@@ -89,6 +91,36 @@ def get_skip():
         if len(c) > 0:
             SKIP = json.loads(c)
     return SKIP
+
+
+def get_blacklist():
+    """return a list of packages that should be skipped
+
+    This is just a normal list of string, if the entry matches part of
+    the name, the package will be skipped during 'check'
+    """
+
+    SKIP = []
+    with open(blacklistfile, 'r') as f:
+        c = "".join(f.readlines())
+        if len(c) > 0:
+            SKIP = json.loads(c)
+    return SKIP
+
+
+def get_whitelist():
+    """return a list of packages that will be highlighted after a 'check'
+
+    This is just a normal list of string, if the entry matches part of
+    the name of the python package
+    """
+
+    white = []
+    with open(whitelistfile, 'r') as f:
+        c = "".join(f.readlines())
+        if len(c) > 0:
+            white = json.loads(c)
+    return white
 
 
 def get_logs():
@@ -344,6 +376,46 @@ class myCMD(cmd.Cmd):
 
     def complete_removeignore(self, text, line, begidx, endidx):
         return auto_complete_package_names(text, line)
+
+    def do_blacklist(self, arg):
+        """print the blacklisted packages or adds a package to the list"""
+        skip = get_blacklist()
+        if arg == "":
+            if len(skip) == 0:
+                print("Currently not blacklisting any packages.")
+            else:
+                print("Currently blacklisting the following packages")
+                for p in skip:
+                    print("  {}".format(p))
+        else:
+            name = arg.strip()
+            print("Added {} to the blacklist.".format(name))
+            if len(skip) == 0:
+                skip = [name]
+            else:
+                skip.append(name)
+            with open(blacklistfile, 'w') as f:
+                json.dump(skip, f, indent=4, sort_keys=True)
+
+    def do_whitelist(self, arg):
+        """print the whitelisted packages or adds a package to the list"""
+        white = get_whitelist()
+        if arg == "":
+            if len(white) == 0:
+                print("Currently not whitelisting any packages.")
+            else:
+                print("Currently whitelisting the following packages")
+                for p in white:
+                    print("  {}".format(p))
+        else:
+            name = arg.strip()
+            print("Added {} to the whitelist.".format(name))
+            if len(white) == 0:
+                white = [name]
+            else:
+                white.append(name)
+            with open(whitelistfile, 'w') as f:
+                json.dump(white, f, indent=4, sort_keys=True)
 
     def do_ignore(self, arg):
         """print the ignore list or adds a package to the list"""
@@ -763,7 +835,13 @@ class myCMD(cmd.Cmd):
         if not self.pending_requests:
             self.do_check_pending()
 
+        # skip packages that have a pending request
         packages = [p for p in packages if p not in self.pending_requests]
+
+        # there are too many packages in dlp, have an option to skip patterns
+        blacklist = get_blacklist()
+        for black in blacklist:
+            packages = [p for p in packages if black not in p]
 
         # packages I'm already preparing an update for
         PENDING = [i.split("/")[-1] for i in
@@ -857,6 +935,8 @@ class myCMD(cmd.Cmd):
         dev = 0
         need = 0
         neednopatch = 0
+        whitelist = get_whitelist()
+        whiteout = []
         self.need_update = {}
         for d, pp, patch in sorted(zip(data, packages, patchfiles), key=lambda x: x[1]):
             p = os.path.basename(pp)
@@ -921,12 +1001,20 @@ class myCMD(cmd.Cmd):
                     changelog = "   "  # no changelog link available
                 # length formatting doesn't work with color-escape
                 # characters in the string, so we do it by hand
-                print("{}{:40}  {}{}{}{}{}".
-                      format(changelog, p,
-                             old[:i]+colored(old[i:], 'red'), " "*(12-len(old)),
-                             new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
-                             patchstr+extra))
+                str_out = "{}{:40}  {}{}{}{}{}".format(changelog, p,
+                                                       old[:i]+colored(old[i:], 'red'), " "*(12-len(old)),
+                                                       new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
+                                                       patchstr+extra)
+                print(str_out)
+                if p in whitelist:
+                    whiteout.append(str_out)
                 self.need_update[p] = d
+        if whiteout:
+            print("")
+            print("Whitelisted packages that need an update:")
+            for i in whiteout:
+                print(i)
+            print("")
         print("checking for outdated packages in branch")
         for p in PENDING:
             try:
