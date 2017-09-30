@@ -19,7 +19,7 @@
 """DLP3
 
 Usage:
-dlp3.py (-n |--no-check)
+dlp3.py [-n |--no-check]
 
 Options:
 -n --no-check    Skip checking for which updates are available
