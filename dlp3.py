@@ -574,6 +574,7 @@ class myCMD(cmd.Cmd):
             orig_good = 0
             orig_bad = 0
             orig_building = 0
+            orig_pending = 0
             for line in output.split('\n'):
                 try:
                     out = line.split()
@@ -599,15 +600,17 @@ class myCMD(cmd.Cmd):
                     orig_bad += 1
                 elif status in ['succeeded']:
                     orig_good += 1
-                elif status in ['scheduled', 'building', 'blocked', 'finished', 'signing', '']:
+                elif status in ['building', 'finished', 'signing']:
                     orig_building += 1
+                elif status in ['scheduled', 'blocked', '']:
+                    orig_pending += 1
                 elif status in ['excluded', 'disabled', 'unresolvable']:
                     skip_status[p][distro].append(system)
                 else:
                     print(colored("unknown status", 'red'), status)
         except:
             skip_status = {}
-            orig_good, orig_bad, orig_building = 0, 0, 0
+            orig_good, orig_bad, orig_building, orig_pending = 0, 0, 0, 0
 
         try:
             output = subprocess.check_output("cd {} && osc results".
@@ -616,9 +619,9 @@ class myCMD(cmd.Cmd):
         except subprocess.CalledProcessError:
             # package doesn't exist anymore, return all zeros and remove from list in caller
             # since this is executed in a thread and won't udate the real class in the main thread
-            return p, (0, 0, 0), (0, 0, 0)
+            return p, (0, 0, 0, 0), (0, 0, 0, 0)
         output = output.decode('utf8')
-        good, bad, building = 0, 0, 0
+        good, bad, building, pending = 0, 0, 0, 0
         for line in output.split('\n'):
             try:
                 out = line.split()
@@ -650,14 +653,16 @@ class myCMD(cmd.Cmd):
                 bad += 1
             elif status in ['succeeded']:
                 good += 1
-            elif status in ['scheduled', 'building', 'blocked', 'finished', 'signing', '']:
+            elif status in ['building', 'finished', 'signing']:
                 building += 1
+            elif status in ['scheduled', 'blocked', '']:
+                pending += 1
             elif status in ['excluded', 'disabled']:
                 pass
             else:
                 print(colored("unknown status", 'red'), status)
 
-        if building == 0:
+        if building+pending == 0:
             if bad == 0 and good > 0:
                 self.good += 1
                 self.good_packages.append(p)
@@ -667,7 +672,7 @@ class myCMD(cmd.Cmd):
         else:
             self.building += 1
 
-        return p, (good, bad, building), (orig_good, orig_bad, orig_building)
+        return p, (good, bad, building, pending), (orig_good, orig_bad, orig_building, orig_pending)
 
     def do_status(self, arg):
         """Print the build status of all packages added by the 'add' command or by 'load'."""
@@ -690,15 +695,15 @@ class myCMD(cmd.Cmd):
         concurrent.futures.wait(fut)
 
         if self.longestname > 0:
-            print("{:^{length}}   good     bad   building".
+            print("{:^{length}}   good     bad   building  pending".
                   format("name", length=self.longestname+2))
 
         result = []
         for f in fut:
             result.append(f.result())
 
-        for p, (good, bad, building), (o_good, o_bad, o_building) in sorted(result):
-            if good == 0 and bad == 0 and building == 0:
+        for p, (good, bad, building, pending), (o_good, o_bad, o_building, o_pending) in sorted(result):
+            if good == 0 and bad == 0 and building == 0 and pending == 0:
                 print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
                 if p in self.good_packages:
                     self.good_packages.remove(p)
@@ -712,18 +717,24 @@ class myCMD(cmd.Cmd):
             # colored messes up the alignment, so we do this by hand over here
             if bad < 10:
                 bad_out = " "
-                bad_out += colored(bad, 'red') if bad > 0 else str(bad)
+                bad_out += colored(bad, 'red') if bad > o_bad else str(bad)
             else:
-                bad_out = colored(bad, 'red') if bad > 0 else bad
-            print("{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {link}".
+                bad_out = colored(bad, 'red') if bad > o_bad else bad
+            if good < 10 and good > 0:
+                good_out = " "
+                good_out += colored(good, 'green') if good >= o_good else str(good)
+            else:
+                good_out = colored(good, 'green') if good >= o_good else good
+            print("{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {: >2}({: >2})    {link}".
                   format(p,
                          good, o_good,
                          bad_out, o_bad,
                          building, o_building,
+                         pending, o_pending,
                          length=self.longestname, link=link))
             self.good_total += good
             self.bad_total += bad
-        print("―"*(self.longestname+28))
+        print("―"*(self.longestname+37))
         print("{:<{length}}    {: >+2}      {: >+2}".
               format("ΔΣ", self.good_total-self.good_lasttotal,
                      self.bad_total-self.bad_lasttotal, length=self.longestname))
