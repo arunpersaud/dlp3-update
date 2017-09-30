@@ -16,11 +16,20 @@
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+"""DLP3
+
+Usage:
+dlp3.py (-n |--no-check)
+
+Options:
+-n --no-check    Skip checking for which updates are available
+"""
 
 import cmd
 import configparser
 from termcolor import colored
 import os
+import docopt
 import subprocess
 import json
 import sys
@@ -1044,7 +1053,9 @@ class myCMD(cmd.Cmd):
                     self.packages.remove(p)
 
 
+commands = docopt.docopt(__doc__, version='dlp3.py 0.9')
 A = myCMD()
 A.load('silent')
-A.do_check('')
+if not commands['--no-check']:
+    A.do_check('')
 A.cmdloop()
