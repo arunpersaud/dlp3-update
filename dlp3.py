@@ -27,6 +27,7 @@ Options:
 
 import cmd
 import configparser
+from collections import defaultdict
 from termcolor import colored
 import os
 import docopt
@@ -490,20 +491,60 @@ class myCMD(cmd.Cmd):
     def do_pending(self, arg):
         print_list(self.pending_requests, title="pending:")
 
-    def check_package(self, p, orig=False):
+    def check_package(self, p):
+        # get information from orig package build status
         try:
-            if orig:
-                output = subprocess.check_output("osc results devel:languages:python {}".
-                                                 format(p),
-                                                 shell=True)
-            else:
-                output = subprocess.check_output("cd {} && osc results".
-                                                 format(os.path.join(myCMD.dir, p)),
-                                                 shell=True)
+            output = subprocess.check_output("osc results devel:languages:python {}".
+                                             format(p),
+                                             shell=True)
+            output = output.decode('utf8')
+            skip_status = defaultdict(lambda: defaultdict(list))
+            orig_good = 0
+            orig_bad = 0
+            orig_building = 0
+            for line in output.split('\n'):
+                try:
+                    out = line.split()
+                    if len(out) == 4:
+                        distro, system, pname, status = out
+                    else:
+                        distro, system, status = out
+                except:
+                    continue
+
+                # no python3, so we get many errors here
+                if distro == "SLE_11_SP4" and status == "unresolvable":
+                    continue
+
+                # unify output a bit
+                if status.endswith("*"):
+                    status = status[:-1]
+
+                # do some counting
+                # the '' exists for example when there is a problem with
+                # OBS and items don't get scheduled
+                if status in['failed', 'unresolvable']:
+                    orig_bad += 1
+                elif status in ['succeeded']:
+                    orig_good += 1
+                elif status in ['scheduled', 'building', 'blocked', 'finished', 'signing', '']:
+                    orig_building += 1
+                elif status in ['excluded', 'disabled']:
+                    skip_status[p][distro].append(system)
+                else:
+                    print(colored("unknown status", 'red'), status)
+        except:
+            skip_status = {}
+            orig_good, orig_bad, orig_building = 0, 0, 0
+
+        try:
+            output = subprocess.check_output("cd {} && osc results".
+                                             format(os.path.join(myCMD.dir, p)),
+                                             shell=True)
         except subprocess.CalledProcessError:
             # package doesn't exist anymore, return all zeros and remove from list in caller
             # since this is executed in a thread and won't udate the real class in the main thread
-            return p, 0, 0, 0
+            return p, (0, 0, 0), (0, 0, 0)
         output = output.decode('utf8')
         good, bad, building = 0, 0, 0
         for line in output.split('\n'):
@@ -515,6 +556,12 @@ class myCMD(cmd.Cmd):
                     distro, system, status = out
             except:
                 continue
+
+            # skip if original build is disabled or excluded
+            if p in skip_status:
+                if distro in skip_status[p]:
+                    if system in skip_status[p][distro]:
+                        continue
 
             # no python3, so we get many errors here
             if distro == "SLE_11_SP4" and status == "unresolvable":
@@ -548,7 +595,7 @@ class myCMD(cmd.Cmd):
         else:
             self.building += 1
 
-        return p, good, bad, building
+        return p, (good, bad, building), (orig_good, orig_bad, orig_building)
 
     def do_status(self, arg):
         """Print the build status of all packages added by the 'add' command or by 'load'."""
@@ -569,9 +616,6 @@ class myCMD(cmd.Cmd):
         # local packages
         fut = [pool.submit(self.check_package, p) for p in tocheck]
         concurrent.futures.wait(fut)
-        # original package
-        fut_orig = [pool.submit(self.check_package, p, True) for p in tocheck]
-        concurrent.futures.wait(fut_orig)
 
         if self.longestname > 0:
             print("{:^{length}}   good     bad   building".
@@ -581,12 +625,7 @@ class myCMD(cmd.Cmd):
         for f in fut:
             result.append(f.result())
 
-        result_orig = {}
-        for f in fut_orig:
-            out = f.result()
-            result_orig[out[0]] = [out[1], out[2], out[3]]
-
-        for p, good, bad, building in sorted(result):
+        for p, (good, bad, building), (o_good, o_bad, o_building) in sorted(result):
             if good == 0 and bad == 0 and building == 0:
                 print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
                 if p in self.good_packages:
@@ -606,9 +645,9 @@ class myCMD(cmd.Cmd):
                 bad_out = colored(bad, 'red') if bad > 0 else bad
             print("{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {link}".
                   format(p,
-                         good, result_orig[p][0],
-                         bad_out, result_orig[p][1],
-                         building, result_orig[p][2],
+                         good, o_good,
+                         bad_out, o_bad,
+                         building, o_building,
                          length=self.longestname, link=link))
             self.good_total += good
             self.bad_total += bad
