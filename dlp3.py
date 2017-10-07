@@ -1174,7 +1174,7 @@ class myCMD(cmd.Cmd):
             f.write('%check\n')
             f.write('%python_exec -m pytest test\n')
             f.write('\n')
-            f.write('%files %{python-files}\n')
+            f.write('%files %{python_files}\n')
             f.write('%defattr(-,root,root,-)\n')
             f.write('%doc README.rst\n')
             f.write('%{python_sitelib}/*\n')
