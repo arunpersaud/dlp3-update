@@ -1153,6 +1153,8 @@ class myCMD(cmd.Cmd):
             f.write('BuildRequires:  %{python_module devel}\n')
             f.write('BuildRequires:  %{python_module setuptools}\n')
             f.write('BuildRequires:  fdupes\n')
+            if ending == ".zip":
+                f.write('BuildRequires:  unzip\n')
             f.write('BuildRequires:  python-rpm-macros\n')
             f.write('BuildRoot:      %{{_tmppath}}/%{name}-%{version}-build\n')
             f.write('BuildArch:      noarch\n')
