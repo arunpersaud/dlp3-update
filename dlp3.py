@@ -1023,7 +1023,7 @@ class myCMD(cmd.Cmd):
                                                        new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
                                                        patchstr+extra)
                 print(str_out)
-                if p in whitelist:
+                if any(w in p for w in whitelist):
                     whiteout.append(str_out)
                 self.need_update[p] = d
         if whiteout:
