@@ -15,6 +15,7 @@
     "python-EasyProcess": "git clone https://github.com/ponty/EasyProcess.git + https://github.com/ponty/EasyProcess/releases",
     "python-Flask": "CHANGES in tar-ball",
     "python-Flask-Migrate": "https://github.com/miguelgrinberg/Flask-Migrate/blob/master/CHANGELOG.md",
+    "python-Flask-SQLAlchemy": "https://github.com/mitsuhiko/flask-sqlalchemy/blob/master/CHANGES.rst",
     "python-Flask-WTF": "see tar-ball",
     "python-Frozen-Flask": "https://pythonhosted.org/Frozen-Flask/#changelog",
     "python-IPython": "http://ipython.org/ipython-doc/3/whatsnew/version3.html",
