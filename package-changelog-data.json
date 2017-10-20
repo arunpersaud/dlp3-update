@@ -417,6 +417,7 @@
     "python-uritemplate": "https://pypi.python.org/pypi/uritemplate",
     "python-urllib3": "see tar ball",
     "python-urwid": "see tar ball",
+    "python-usb": "see tar-ball",
     "python-vcversioner": "git clone https://github.com/habnabit/vcversioner.git",
     "python-versioneer": "git clone https://github.com/warner/python-versioneer.git",
     "python-veusz": "http://home.gna.org/veusz/releasenotes/",
