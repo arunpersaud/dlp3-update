@@ -28,21 +28,22 @@ Options:
 import cmd
 import configparser
 from collections import defaultdict
-from termcolor import colored
-import os
-import docopt
-import subprocess
+import concurrent.futures
+from datetime import datetime
+import glob
 import json
+import os
+import re
+import subprocess
 import sys
 import xmlrpc.client as xmlrpclib
+
+import docopt
 import natsort
-import glob
 import requests
-from datetime import datetime
-import re
+from termcolor import colored
 
 # some tasks are done in parallel via concurrent.futures
-import concurrent.futures
 pool = concurrent.futures.ThreadPoolExecutor(max_workers=7)
 
 # read path information from config file
@@ -50,7 +51,7 @@ config = configparser.ConfigParser()
 conf_file = config.read(['dlp3.conf',
                          os.path.expanduser('~/.config/dlp3/dlp3.conf')])
 
-if len(conf_file) == 0:
+if not conf_file:
     print("Couldn't find dlp3.conf")
     print("Please create a dlp3.conf file with the following information")
     print("------")
@@ -88,7 +89,7 @@ def get_skip():
     SKIP = dict()
     with open(skipfile, 'r') as f:
         c = "".join(f.readlines())
-        if len(c) > 0:
+        if c:
             SKIP = json.loads(c)
     return SKIP
 
@@ -104,7 +105,7 @@ def get_blacklist():
     try:
         with open(blacklistfile, 'r') as f:
             c = "".join(f.readlines())
-            if len(c) > 0:
+            if c:
                 SKIP = json.loads(c)
     except IOError:
         pass
@@ -122,7 +123,7 @@ def get_whitelist():
     try:
         with open(whitelistfile, 'r') as f:
             c = "".join(f.readlines())
-            if len(c) > 0:
+            if c:
                 white = json.loads(c)
     except IOError:
         pass
@@ -134,14 +135,14 @@ def get_logs():
     logs = dict()
     with open(logfile, 'r') as f:
         c = "".join(f.readlines())
-        if len(c) > 0:
+        if c:
             logs = json.loads(c)
     return logs
 
 
 def print_list(l, title="packages:", links=False):
     """print a list of packages"""
-    if len(l) == 0:
+    if not l:
         print("list is empty")
     else:
         print(title)
@@ -166,8 +167,8 @@ def my_submit(package):
         print(line)
         if line.startswith("created request id"):
             worked = package
-            id = line.split()[-1]
-            link = "https://build.opensuse.org/request/show/"+str(id)
+            myid = line.split()[-1]
+            link = "https://build.opensuse.org/request/show/"+str(myid)
             print("   link: ", link)
 
     return worked
@@ -235,9 +236,9 @@ def my_update(package, d):
     files = [spec, spec.replace(".spec", "-doc.spec")]
     for file in files:
         try:
-            with open(os.path.join(branchdir, file), "r+") as input:
-                content = input.readlines()
-                input.seek(0)
+            with open(os.path.join(branchdir, file), "r+") as myinput:
+                content = myinput.readlines()
+                myinput.seek(0)
                 for line in content:
                     if "Version" in line and old in line:
                         line = line.replace(old, new)
@@ -261,7 +262,7 @@ def my_update(package, d):
                             if len(tmp[4]) == 2:
                                 # using direct download link, need to update it
                                 line = "{}:         {}".format(source, url)
-                    input.write(line)
+                    myinput.write(line)
         except FileNotFoundError:
             pass
     # write changelog entries if we have any
@@ -289,7 +290,7 @@ def auto_complete_package_names(text, line):
     """
 
     lastword = line.split()[-1]
-    if len(text) > 0:
+    if text:
         lastword = lastword[:-len(text)]
     # skip the beginning if we already have it on the line
     l = len(lastword)
@@ -387,7 +388,7 @@ class myCMD(cmd.Cmd):
         """print the blacklisted packages or adds a package to the list"""
         skip = get_blacklist()
         if arg == "":
-            if len(skip) == 0:
+            if not skip:
                 print("Currently not blacklisting any packages.")
             else:
                 print("Currently blacklisting the following packages")
@@ -396,7 +397,7 @@ class myCMD(cmd.Cmd):
         else:
             name = arg.strip()
             print("Added {} to the blacklist.".format(name))
-            if len(skip) == 0:
+            if not skip:
                 skip = [name]
             else:
                 skip.append(name)
@@ -407,7 +408,7 @@ class myCMD(cmd.Cmd):
         """print the whitelisted packages or adds a package to the list"""
         white = get_whitelist()
         if arg == "":
-            if len(white) == 0:
+            if not white:
                 print("Currently not whitelisting any packages.")
             else:
                 print("Currently whitelisting the following packages")
@@ -416,7 +417,7 @@ class myCMD(cmd.Cmd):
         else:
             name = arg.strip()
             print("Added {} to the whitelist.".format(name))
-            if len(white) == 0:
+            if not white:
                 white = [name]
             else:
                 white.append(name)
@@ -427,7 +428,7 @@ class myCMD(cmd.Cmd):
         """print the ignore list or adds a package to the list"""
         skip = get_skip()
         if arg == "":
-            if len(skip) == 0:
+            if not skip:
                 print("Currently not ignoring any packages.")
             else:
                 print("Currently ignoring the following packages")
@@ -693,7 +694,7 @@ class myCMD(cmd.Cmd):
         tocheck = [i for i in tocheck if i not in self.pending_requests]
         self.good_packages = []
         self.bad_packages = []
-        self.longestname = max([len(p) for p in tocheck]) if len(tocheck) > 0 else 0
+        self.longestname = max([len(p) for p in tocheck]) if tocheck else 0
 
         # parallel check
         # local packages
@@ -823,7 +824,7 @@ class myCMD(cmd.Cmd):
         else:
             packages = self.need_update.keys()
 
-        if len(packages) == 0:
+        if not packages:
             print("Can't find any packages that need updates. Did you run 'check' first?")
 
         fut = [pool.submit(my_update, p, self.need_update[p]) for p in packages]
@@ -942,7 +943,7 @@ class myCMD(cmd.Cmd):
         results += tuple(client())
 
         # we really only want the latest version
-        results = [r[0] if len(r) else None for r in results]
+        results = [r[0] if r else None for r in results]
 
         # package everything a bit nicer
         data = [[v, r, n, u, s] for [n, v, u, p], s, r in
@@ -1200,7 +1201,7 @@ class myCMD(cmd.Cmd):
         """Load last list of packages."""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'r') as f:
             c = "".join(f.readlines())
-            if len(c) > 0:
+            if c:
                 self.packages = json.loads(c)
             if arg != 'silent':
                 print("Loaded package list")
