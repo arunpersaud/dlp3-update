@@ -1046,11 +1046,15 @@ class myCMD(cmd.Cmd):
                     if l.startswith("Version"):
                         version1 = l.split(":")[1].strip()
                         break
-            with open(s2, 'r') as f:
-                for l in f:
-                    if l.startswith("Version"):
-                        version2 = l.split(":")[1].strip()
+            try:
+                with open(s2, 'r') as f:
+                    for l in f:
+                        if l.startswith("Version"):
+                            version2 = l.split(":")[1].strip()
                         break
+            except:
+                print("no spec file in dlp")
+                version2 = ""
             if version1 == natsort.natsorted([version1, version2])[0]:
                 print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
         print("Found {} up to date packages,".format(good) +
