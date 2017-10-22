@@ -130,6 +130,80 @@ def get_whitelist():
     return white
 
 
+def is_singlespec(name):
+    specs = glob.glob("{}/*spec".format(os.path.join(dlp3_path, name)))
+    out = []
+    for spec in specs:
+        with open(spec, 'r') as f:
+            lines = f.readlines()
+            singlespec = False
+            for l in lines:
+                if l.startswith('#'):
+                    continue
+                elif "python_module()" in l:
+                    singlespec = True
+                elif '%description' in l:
+                    break
+            out.append(singlespec)
+    return all(out)
+
+
+def get_whitelist_depends():
+    orig = get_whitelist()
+    depend = set()
+    to_check = orig
+    # get list that we need to check
+    while to_check:
+        p = to_check.pop()
+        specs = glob.glob("{}/*spec".format(os.path.join(dlp3_path, "*"+p)))
+        for spec in specs:
+            with open(spec, 'r') as f:
+                lines = f.readlines()
+                singlespec = False
+                for l in lines:
+                    if l.startswith('#'):
+                        continue
+                    if "python_module()" in l:
+                        singlespec = True
+                    if "Requires:" in l:
+                        if "oldpython" in l:
+                            continue
+                        if "python" in l:
+                            name = l.split()
+                            if "%{python_module" in name[1]:
+                                name = "python-"+name[2]
+                                if name.endswith('}'):
+                                    name = name[:-1]
+                            else:
+                                name = name[1]
+                            name = name.strip()
+                            if 'python3' in name:
+                                name = name.replace('python3', 'python')
+                            if 'python2' in name:
+                                name = name.replace('python2', 'python')
+                            if name not in depend:
+                                to_check.append(name)
+                                depend.add(name)
+                    if '%description' in l:
+                        break
+    # remove python2 packages
+    for p in ['python-backports.shutil_get_terminal_size',
+              'python-configparser',
+              'python-enum34',
+              'python-funcsigs',
+              'python-functools32',
+              'python-ipaddress',
+              'python-ordereddict',
+              'python-pathlib2',
+              'python-rpm-macros',
+              'python-singledispatch',
+              'python-subprocess32']:
+        if p in depend:
+            depend.remove(p)
+
+    return depend
+
+
 def get_logs():
     """return a dict with package-name->changelog location urls """
     logs = dict()
@@ -225,6 +299,7 @@ def my_update(package, d):
 
     # add new package, remove old one
     newpackage = url.split("/")[-1]
+
     oldpackage = d[3].replace("%{version}", old).split("/")[-1]
     print(oldpackage, "=>", newpackage)
     os.system("cd {} && rm {}".format(branchdir, oldpackage))
@@ -321,6 +396,7 @@ class myCMD(cmd.Cmd):
         self.bad_lasttotal = 0
         self.longestname = 0
         self.pending_requests = []
+        self.depends = []
 
     def do_quit(self, arg):
         self.save('silent')
@@ -423,6 +499,24 @@ class myCMD(cmd.Cmd):
                 white.append(name)
             with open(whitelistfile, 'w') as f:
                 json.dump(white, f, indent=4, sort_keys=True)
+
+    def do_depend(self, arg):
+        """print packages the whitelisted packages depend on"""
+        depends = get_whitelist_depends()
+        self.depend = depends
+        if arg != 'silent':
+            if not depends:
+                print("Currently no dependencies.")
+            else:
+                print("Currently whitelisted package depend on the following packages:")
+                non_single = []
+                for p in sorted(depends):
+                    if is_singlespec(p):
+                        print("  {}".format(p))
+                    else:
+                        non_single.append(p)
+                for p in non_single:
+                    print("non-singlespec:   {}".format(p))
 
     def do_ignore(self, arg):
         """print the ignore list or adds a package to the list"""
@@ -955,6 +1049,7 @@ class myCMD(cmd.Cmd):
         neednopatch = 0
         whitelist = get_whitelist()
         whiteout = []
+        dependout = []
         self.need_update = {}
         for d, pp, patch in sorted(zip(data, packages, patchfiles), key=lambda x: x[1]):
             p = os.path.basename(pp)
@@ -1026,7 +1121,15 @@ class myCMD(cmd.Cmd):
                 print(str_out)
                 if any(w in p for w in whitelist):
                     whiteout.append(str_out)
+                if p in self.depend:
+                    dependout.append(str_out)
                 self.need_update[p] = d
+        if dependout:
+            print("")
+            print("Whitelisted packages dependencies that need an update: ({} packages)".format(len(dependout)))
+            for i in dependout:
+                print(i)
+            print("")
         if whiteout:
             print("")
             print("Whitelisted packages that need an update:")
@@ -1217,5 +1320,6 @@ commands = docopt.docopt(__doc__, version='dlp3.py 0.9')
 A = myCMD()
 A.load('silent')
 if not commands['--no-check']:
+    A.do_depend('silent')
     A.do_check('')
 A.cmdloop()
