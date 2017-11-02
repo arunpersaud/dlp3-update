@@ -1118,11 +1118,12 @@ class myCMD(cmd.Cmd):
                                                        old[:i]+colored(old[i:], 'red'), " "*(12-len(old)),
                                                        new[:i]+colored(new[i:], 'green'), " "*(12-len(new)),
                                                        patchstr+extra)
-                print(str_out)
                 if any(w in p for w in whitelist):
                     whiteout.append(str_out)
-                if p in self.depend:
+                elif p in self.depend:
                     dependout.append(str_out)
+                else:
+                    print(str_out)
                 self.need_update[p] = d
         if dependout:
             print("")
