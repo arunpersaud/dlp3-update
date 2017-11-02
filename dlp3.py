@@ -814,7 +814,7 @@ class myCMD(cmd.Cmd):
                     self.packages.remove(p)
 
             # add link in case something went wrong
-            link = dlp3_web_branch+p if bad > 0 else ""
+            link = dlp3_web_branch+p
             # colored messes up the alignment, so we do this by hand over here
             if bad < 10:
                 bad_out = " "
