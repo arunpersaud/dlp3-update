@@ -1265,7 +1265,7 @@ class myCMD(cmd.Cmd):
             if ending == ".zip":
                 f.write('BuildRequires:  unzip\n')
             f.write('BuildRequires:  python-rpm-macros\n')
-            f.write('BuildRoot:      %{{_tmppath}}/%{name}-%{version}-build\n')
+            f.write('BuildRoot:      %{_tmppath}/%{name}-%{version}-build\n')
             f.write('BuildArch:      noarch\n')
             f.write('%python_subpackages\n')
             f.write('\n')
