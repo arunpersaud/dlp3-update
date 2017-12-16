@@ -994,7 +994,7 @@ class myCMD(cmd.Cmd):
                 for l in f:
                     if not version and l.startswith("Version:"):
                         version = l.split(":")[1].strip()
-                    if not url and l.startswith("Source:") and "version" in l:
+                    if not url and l.startswith("Source") and "version" in l:
                         url = l.split(":", maxsplit=1)[1].strip()
                         parts = l.split("/")
                         if len(parts) > 6 and (parts[2] == "pypi.python.org" or parts[2] == "files.pythonhosted.org"):
