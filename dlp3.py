@@ -1156,12 +1156,11 @@ class myCMD(cmd.Cmd):
                     for l in f:
                         if l.startswith("Version"):
                             version2 = l.split(":")[1].strip()
-                        break
+                            break
+                if version1 == natsort.natsorted([version1, version2])[0]:
+                    print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
             except:
-                print("no spec file in dlp")
-                version2 = ""
-            if version1 == natsort.natsorted([version1, version2])[0]:
-                print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
+                print("no Version in spec file in dlp for package", p)
         print("Found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,\n".format(need) +
