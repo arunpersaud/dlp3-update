@@ -1178,7 +1178,7 @@ class myCMD(cmd.Cmd):
     def do_submit(self, arg):
         """Create SR for all packages that build correctly."""
         worked = []
-        to_submit = arg.split()[1:]
+        to_submit = arg.split()
         print("―"*27)
         fut = [pool.submit(my_submit, p) for p in to_submit]
         concurrent.futures.wait(fut)
