@@ -230,8 +230,12 @@ def print_list(l, title="packages:", links=False):
 
 
 def my_submit(package):
-    print("    ", package)
 
+    if not os.path.isdir(os.path.join(myCMD.dir, package)):
+        print("     WARNING: package {} doesn't exist! skipping...".format(package))
+        return None
+
+    print("    ", package)
     worked = None
     output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package)) +
                                      ' && osc submitrequest --yes -m "update to latest version"',
