@@ -1143,28 +1143,27 @@ class myCMD(cmd.Cmd):
             print("")
         print("checking for outdated packages in branch")
         for p in PENDING:
-            try:
-                s1 = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))[0]
-                s2 = glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0]
-            except:
-                print("Error with package", path, p)
-                print("  perhaps this has been removed from dlp?")
-                print("  (in which case you need to update the local copy)")
+            s1 = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))[0]
             with open(s1, 'r') as f:
                 for l in f:
                     if l.startswith("Version"):
                         version1 = l.split(":")[1].strip()
                         break
             try:
+                s2 = glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0]
                 with open(s2, 'r') as f:
                     for l in f:
                         if l.startswith("Version"):
                             version2 = l.split(":")[1].strip()
                             break
-                if version1 == natsort.natsorted([version1, version2])[0]:
-                    print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
             except:
-                print("no Version in spec file in dlp for package", p)
+                print("Error with package", path, p)
+                print("Can't open dlp version")
+                print("  perhaps this has been removed from dlp?")
+                print("  (in which case you need to update the local copy)")
+                version2 = ''
+            if version1 == natsort.natsorted([version1, version2])[0]:
+                print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
         print("Found {} up to date packages,".format(good) +
               " {} with a dev release, ".format(dev) +
               "and {} packages that need an update,\n".format(need) +
