@@ -1318,7 +1318,7 @@ class myCMD(cmd.Cmd):
 commands = docopt.docopt(__doc__, version='dlp3.py 0.9')
 A = myCMD()
 A.load('silent')
+A.do_depend('silent')
 if not commands['--no-check']:
-    A.do_depend('silent')
     A.do_check('')
 A.cmdloop()
