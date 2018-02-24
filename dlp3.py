@@ -507,7 +507,7 @@ class myCMD(cmd.Cmd):
     def do_depend(self, arg):
         """print packages the whitelisted packages depend on"""
         depends = get_whitelist_depends()
-        self.depend = depends
+        self.depends = depends
         if arg != 'silent':
             if not depends:
                 print("Currently no dependencies.")
@@ -1124,7 +1124,7 @@ class myCMD(cmd.Cmd):
                                                        patchstr+extra)
                 if any(w in p for w in whitelist):
                     whiteout.append(str_out)
-                elif p in self.depend:
+                elif p in self.depends:
                     dependout.append(str_out)
                 else:
                     print(str_out)
