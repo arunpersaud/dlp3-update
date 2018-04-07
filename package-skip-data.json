@@ -1,7 +1,6 @@
 {
     "python-Attest": "-",
     "python-Babel-doc": "-",
-    "python-Cython": "0.27.3",
     "python-WebOb-doc": "-",
     "python-WebTest-doc": "-",
     "python-Werkzeug-doc": "-",
@@ -24,7 +23,6 @@
     "python-jupyter_qtconsole-doc": "-",
     "python-keyrings.alt": "-",
     "python-louis": "-",
-    "python-lxml": "4.1.1",
     "python-matplotib": "2.1.0",
     "python-mock-doc": "-",
     "python-numpy-doc": "-",
