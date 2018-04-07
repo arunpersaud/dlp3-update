@@ -431,6 +431,13 @@ class myCMD(cmd.Cmd):
                 print("adding ", p)
                 if p not in self.packages:
                     self.packages.append(p)
+                    output = subprocess.check_output('cd {} && spec-cleaner -i {}.spec'.
+                                                     format(os.path.join(dlp3_branch_path, p), p),
+                                                     shell=True)
+                    if os.path.isfile(os.path.join(myCMD.dir, p, p+'-doc.spec')):
+                        output = subprocess.check_output('cd {} && spec-cleaner -i {}-doc.spec'.
+                                                         format(os.path.join(dlp3_branch_path, p), p),
+                                                         shell=True)
                     output = subprocess.check_output('cd {} && osc ci -n'.
                                                      format(os.path.join(dlp3_branch_path, p)),
                                                      shell=True)
