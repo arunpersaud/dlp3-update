@@ -25,6 +25,8 @@ Options:
 -n --no-check    Skip checking for which updates are available
 """
 
+import asyncio
+from aiohttp import ClientSession
 import cmd
 import configparser
 from collections import defaultdict
@@ -36,7 +38,6 @@ import os
 import re
 import subprocess
 import sys
-import xmlrpc.client as xmlrpclib
 
 import docopt
 import natsort
@@ -879,6 +880,8 @@ class myCMD(cmd.Cmd):
         for line in output.split('\n\n'):
             if "add_role" in line:
                 continue
+            if "This is a humble request" in line:
+                continue
             if "State:new" in line:
                 tmp = line.split()
                 nr = tmp[0]
@@ -1027,32 +1030,43 @@ class myCMD(cmd.Cmd):
             else:
                 name_version.append([None, None, None, None])
 
-        clientpool = xmlrpclib.ServerProxy('https://pypi.python.org/pypi')
-        client = xmlrpclib.MultiCall(clientpool)
+        # check version of packages in parallel
+        async def fetch(url, session):
+            async with session.get(url) as response:
+                return await response.read()  # response.json gave errors for some packages
 
-        # do 60 requests at once, it doesn't work with all of them in one request
-        results = []
-        for i, [n, v, u, p] in enumerate(name_version):
-            if n is not None:
-                client.package_releases(n)
-            else:
-                client.package_releases('nonexistingdummy')
-            if not i % 60:
-                results += tuple(client())
-                # tried to parallize this with a concurrent pool, but they either all need
-                # their own client version (e.g. tcp connection) or it wouldn't work
-                # that is xmlrpclib.ServerProxy is not threadsafe
-                # this way should be faster as long as we only need a handful of connections
-                # currently roughly 360 packages/60 = 6
-                client = xmlrpclib.MultiCall(clientpool)
-        results += tuple(client())
+        results = {}
 
-        # we really only want the latest version
-        results = [r[0] if r else None for r in results]
+        async def run():
+            url = "https://pypi.org/pypi/{}/json"
+            tasks = []
+            # Fetch all responses within one Client session,
+            # keep connection alive for all requests.
+            async with ClientSession() as session:
+                for n, v, u, p in name_version:
+                    if n:
+                        f = asyncio.ensure_future(fetch(url.format(n), session))
+                        tasks.append(f)
+
+                responses = await asyncio.gather(*tasks)
+                for r in responses:
+                    try:
+                        r = json.loads(r)
+                        package = r['info']['name']
+                        results[package] = list(r['releases'].keys())[-1]
+                    except json.decoder.JSONDecodeError:
+                        pass
+
+        loop = asyncio.get_event_loop()
+        future = asyncio.ensure_future(run())
+        loop.run_until_complete(future)
+
+        # sort list in same order as in name_version
+        results_list = [results[n] if n in results else None for n, v, u, p in name_version]
 
         # package everything a bit nicer
         data = [[v, r, n, u, s] for [n, v, u, p], s, r in
-                zip(name_version, specfiles, results)]
+                zip(name_version, specfiles, results_list)]
 
         good = 0
         dev = 0
