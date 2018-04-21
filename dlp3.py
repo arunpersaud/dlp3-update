@@ -439,9 +439,12 @@ class myCMD(cmd.Cmd):
                         output = subprocess.check_output('cd {} && spec-cleaner -i {}-doc.spec'.
                                                          format(os.path.join(dlp3_branch_path, p), p),
                                                          shell=True)
-                    output = subprocess.check_output('cd {} && osc ci -n'.
-                                                     format(os.path.join(dlp3_branch_path, p)),
-                                                     shell=True)
+                    try:
+                        output = subprocess.check_output('cd {} && osc ci -n'.
+                                                         format(os.path.join(dlp3_branch_path, p)),
+                                                         shell=True)
+                    except subprocess.CalledProcessError:
+                        print("Error: can't submit {}".format(p))
                 else:
                     print("already in list")
             else:
