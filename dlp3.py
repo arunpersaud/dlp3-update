@@ -954,7 +954,12 @@ class myCMD(cmd.Cmd):
         logs = get_logs()
 
         # list of packages to check
-        if arg != "":
+        show_all = False  # only show whitelisted and their dependencies
+        if arg.strip() == 'all':
+            show_all = True
+            arg = ''
+
+        if arg != '':
             packages = arg.split()
         else:
             packages = glob.glob(os.path.join(dlp3_path, "python*"))
@@ -1151,7 +1156,8 @@ class myCMD(cmd.Cmd):
                 elif p in self.depends:
                     dependout.append(str_out)
                 else:
-                    print(str_out)
+                    if show_all:
+                        print(str_out)
                 self.need_update[p] = d
         if dependout:
             print("")
