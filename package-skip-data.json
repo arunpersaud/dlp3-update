@@ -33,6 +33,7 @@
     "python-pluggy03": "-",
     "python-polib-doc": "-",
     "python-psycopg2-doc": "-",
+    "python-py": "1.5.3",
     "python-py-doc": "-",
     "python-pyOpenSSL-doc": "-",
     "python-pyramid-doc": "-",
