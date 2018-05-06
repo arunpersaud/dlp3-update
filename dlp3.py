@@ -1061,7 +1061,7 @@ class myCMD(cmd.Cmd):
                     try:
                         r = json.loads(r)
                         package = r['info']['name']
-                        results[package] = list(r['releases'].keys())[-1]
+                        results[package] = natsort.natsorted(list(r['releases'].keys()))[-1]
                     except json.decoder.JSONDecodeError:
                         pass
 
