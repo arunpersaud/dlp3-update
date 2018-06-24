@@ -1173,7 +1173,12 @@ class myCMD(cmd.Cmd):
             print("")
         print("checking for outdated packages in branch")
         for p in PENDING:
-            s1 = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))[0]
+            s1 = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))
+            if s1:
+                s1 = s1[0]
+            else:
+                print("Can't find spec file for package", p, '...skipping')
+                continue
             with open(s1, 'r') as f:
                 for l in f:
                     if l.startswith("Version"):
