@@ -168,6 +168,7 @@
     "python-dnspython": "https://github.com/rthalley/dnspython/blob/master/ChangeLog",
     "python-docker": "https://github.com/docker/docker-py/blob/master/docs/change-log.md",
     "python-docker-py": "https://github.com/docker/docker-py/blob/master/docs/change_log.md",
+    "python-docker-pycreds": "https://github.com/shin-/dockerpy-creds/commits/master",
     "python-docutils": "see tar-ball HISTORY.txt",
     "python-dulwich": "https://www.dulwich.io/docs/#changelog",
     "python-easy-thumbnails": "see tar ball",
