@@ -680,115 +680,87 @@ class myCMD(cmd.Cmd):
         print_list(self.pending_requests, title="pending:")
 
     def check_package(self, p):
-        # get information from orig package build status
-        try:
-            output = subprocess.check_output("osc results devel:languages:python {}".
-                                             format(p),
-                                             shell=True)
-            output = output.decode('utf8')
-            skip_status = defaultdict(lambda: defaultdict(list))
-            orig_good = 0
-            orig_bad = 0
-            orig_building = 0
-            orig_pending = 0
-            for line in output.split('\n'):
-                try:
-                    out = line.split()
-                    if len(out) == 4:
-                        distro, system, pname, status = out
-                    else:
-                        distro, system, status = out
-                except:
-                    continue
+        cmd_dlp = 'osc results devel:languages:python {}'.format(p)
+        cmd_update = 'cd {} && osc results'.format(os.path.join(myCMD.dir, p))
 
-                # no python3, so we get many errors here
-                if distro == "SLE_11_SP4" and status == "unresolvable":
-                    continue
+        skip_status = defaultdict(lambda: defaultdict(list))
+        dlp_status = {'good': 0, 'bad': 0, 'building': 0, 'pending': 0, 'broken': 0}
+        update_status = {'good': 0, 'bad': 0, 'building': 0, 'pending': 0, 'broken': 0}
 
-                # unify output a bit
-                if status.endswith("*"):
-                    status = status[:-1]
-
-                # do some counting
-                # the '' exists for example when there is a problem with
-                # OBS and items don't get scheduled
-                if status in['failed']:
-                    orig_bad += 1
-                elif status in ['succeeded']:
-                    orig_good += 1
-                elif status in ['building', 'finished', 'signing']:
-                    orig_building += 1
-                elif status in ['scheduled', 'blocked', '']:
-                    orig_pending += 1
-                elif status in ['excluded', 'disabled', 'unresolvable']:
-                    skip_status[p][distro].append(system)
-                else:
-                    print(colored("unknown status", 'red'), status)
-        except:
-            skip_status = {}
-            orig_good, orig_bad, orig_building, orig_pending = 0, 0, 0, 0
-
-        try:
-            output = subprocess.check_output("cd {} && osc results".
-                                             format(os.path.join(myCMD.dir, p)),
-                                             shell=True)
-        except subprocess.CalledProcessError:
-            # package doesn't exist anymore, return all zeros and remove from list in caller
-            # since this is executed in a thread and won't udate the real class in the main thread
-            return p, (0, 0, 0, 0), (0, 0, 0, 0)
-        output = output.decode('utf8')
-        good, bad, building, pending = 0, 0, 0, 0
-        for line in output.split('\n'):
+        for cmd in [cmd_dlp, cmd_update]:
+            # get information from orig package build status
             try:
-                out = line.split()
-                if len(out) == 4:
-                    distro, system, pname, status = out
-                else:
-                    distro, system, status = out
-            except:
-                continue
-
-            # skip if original build is disabled or excluded
-            if p in skip_status:
-                if distro in skip_status[p]:
-                    if system in skip_status[p][distro]:
+                output = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+                output = output.decode('utf8')
+                for line in output.split('\n'):
+                    try:
+                        out = line.split()
+                        if len(out) == 4:
+                            distro, system, pname, status = out
+                        else:
+                            distro, system, status = out
+                    except:
                         continue
 
-            # no python3, so we get many errors here
-            if distro == "SLE_11_SP4" and status == "unresolvable":
-                continue
+                    if cmd == cmd_update:
+                        # skip if original build is disabled or excluded
+                        if p in skip_status:
+                            if distro in skip_status[p]:
+                                if system in skip_status[p][distro]:
+                                    continue
 
-            # unify output a bit
-            if status.endswith("*"):
-                status = status[:-1]
+                    # no python3, so we get many errors here
+                    if distro == "SLE_11_SP4" and status == "unresolvable":
+                        continue
 
-            # do some counting
-            # the '' exists for example when there is a problem with
-            # OBS and items don't get scheduled
-            if status in['failed', 'unresolvable']:
-                bad += 1
-            elif status in ['succeeded']:
-                good += 1
-            elif status in ['building', 'finished', 'signing']:
-                building += 1
-            elif status in ['scheduled', 'blocked', '']:
-                pending += 1
-            elif status in ['excluded', 'disabled']:
-                pass
-            else:
-                print(colored("unknown status", 'red'), status)
+                    # unify output a bit
+                    if status.endswith("*"):
+                        status = status[:-1]
 
-        if building+pending == 0:
-            if bad == 0 and good > 0:
+                    # do some counting
+                    # the '' exists for example when there is a problem with
+                    # OBS and items don't get scheduled
+                    count = None
+                    if status in['failed']:
+                        count = 'bad'
+                    elif status in['broken']:
+                        count = 'broken'
+                    elif status in ['succeeded']:
+                        count = 'good'
+                    elif status in ['building', 'finished', 'signing']:
+                        count = 'building'
+                    elif status in ['scheduled', 'blocked', '']:
+                        count = 'pending'
+                    elif status in ['excluded', 'disabled', 'unresolvable']:
+                        if cmd == cmd_dlp:
+                            skip_status[p][distro].append(system)
+                    else:
+                        print(colored("unknown status", 'red'), status, p)
+                    if count is not None:
+                        if cmd == cmd_dlp:
+                            dlp_status[count] += 1
+                        else:
+                            update_status[count] += 1
+            except subprocess.CalledProcessError as e:
+                output = e.output.decode('utf8')
+                if cmd == cmd_update:
+                    return p, update_status, dlp_status
+                else:
+                    if 'HTTP Error 404: unknown package' in output:
+                        for k in dlp_status:
+                            dlp_status[k] = -1
+
+        if update_status['building']+update_status['pending'] == 0:
+            if update_status['bad'] == 0 and update_status['good'] > 0:
                 self.good += 1
                 self.good_packages.append(p)
-            elif bad > 0:
+            elif update_status['bad'] > 0:
                 self.bad += 1
                 self.bad_packages.append(p)
         else:
             self.building += 1
 
-        return p, (good, bad, building, pending), (orig_good, orig_bad, orig_building, orig_pending)
+        return p, update_status, dlp_status
 
     def do_status(self, arg):
         """Print the build status of all packages added by the 'add' command or by 'load'."""
@@ -818,38 +790,51 @@ class myCMD(cmd.Cmd):
         for f in fut:
             result.append(f.result())
 
-        for p, (good, bad, building, pending), (o_good, o_bad, o_building, o_pending) in sorted(result):
-            if good == 0 and bad == 0 and building == 0 and pending == 0:
-                print("Package {} doesn't seem to exist anymore... removed it from the list".format(p))
-                if p in self.good_packages:
-                    self.good_packages.remove(p)
-                if p in self.bad_packages:
-                    self.bad_packages.remove(p)
-                if p in self.packages:
-                    self.packages.remove(p)
-
+        for p, update_status, dlp_status in sorted(result):
             # add link in case something went wrong
             link = dlp3_web_branch+p
             # colored messes up the alignment, so we do this by hand over here
-            if bad < 10:
-                bad_out = " "
-                bad_out += colored(bad, 'red') if bad > o_bad else str(bad)
+            if update_status['bad'] < 10:
+                bad_out = ' '
             else:
-                bad_out = colored(bad, 'red') if bad > o_bad else bad
-            if good < 10 and good > 0:
-                good_out = " "
-                good_out += colored(good, 'green') if good >= o_good else str(good)
+                bad_out = ''
+            if update_status['bad'] > dlp_status['bad']:
+                bad_out += colored(update_status['bad'], 'red')
             else:
-                good_out = colored(good, 'green') if good >= o_good else good
-            print("{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {: >2}({: >2})    {link}".
-                  format(p,
-                         good, o_good,
-                         bad_out, o_bad,
-                         building, o_building,
-                         pending, o_pending,
-                         length=self.longestname, link=link))
-            self.good_total += good
-            self.bad_total += bad
+                bad_out += str(update_status['bad'])
+
+            if update_status['good'] < 10 and update_status['good'] > 0:
+                good_out = ' '
+            else:
+                good_out = ''
+            if update_status['good'] > dlp_status['good']:
+                good_out += colored(update_status['good'], 'green')
+            else:
+                good_out += str(update_status['good'])
+            if update_status['broken'] == 0:
+                if dlp_status['good'] < 0:
+                    print("{:<{length}}    {: >2}(--)   {}(--)   {: >2}(--)    {: >2}(--)    {link}".
+                          format(p,
+                                 update_status['good'],
+                                 update_status['bad'],
+                                 update_status['building'],
+                                 update_status['pending'],
+                                 length=self.longestname, link=link))
+                else:
+                    print("{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {: >2}({: >2})    {link}".
+                          format(p,
+                                 update_status['good'], dlp_status['good'],
+                                 bad_out, dlp_status['bad'],
+                                 update_status['building'], dlp_status['building'],
+                                 update_status['pending'], dlp_status['pending'],
+                                 length=self.longestname, link=link))
+
+            else:
+                print("{:<{length}}     broken                              {link}".
+                      format(p, length=self.longestname, link=link))
+
+            self.good_total += update_status['good']
+            self.bad_total += update_status['bad']
         print("―"*(self.longestname+37))
         print("{:<{length}}    {: >+2}      {: >+2}".
               format("ΔΣ", self.good_total-self.good_lasttotal,
@@ -1193,8 +1178,7 @@ class myCMD(cmd.Cmd):
                             break
             except:
                 print("Error with package", path, p)
-                print("Can't open dlp version")
-                print("  perhaps this has been removed from dlp?")
+                print("Can't open dlp version...  perhaps this has been removed from dlp?")
                 print("  (in which case you need to update the local copy)")
                 version2 = ''
             if version1 == natsort.natsorted([version1, version2])[0]:
