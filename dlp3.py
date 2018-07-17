@@ -430,6 +430,30 @@ class myCMD(cmd.Cmd):
         for p in packages:
             if os.path.isdir(os.path.join(myCMD.dir, p)):
                 print("adding ", p)
+                # do some error checking
+                local_specs = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))
+                devel_and_noarch = 0
+                files_section = 0
+                for s in local_specs:
+                    with open(s, 'r') as f:
+                        lines = f.readlines()
+                        devel = 0
+                        noarch = 0
+                        for l in lines:
+                            if 'noarch' in l.lower():
+                                noarch = 1
+                            if '%{python_module devel}' in l.lower():
+                                devel = 1
+                            if '%{python_sitelib}/*' in l.lower():
+                                files_section += 1
+                        if noarch and devel:
+                            devel_and_noarch += 1
+                if devel_and_noarch or files_section:
+                    if devel_and_noarch:
+                        print('need to remove devel... not adding package')
+                    if files_section:
+                        print('need to fix %files... not adding package')
+                    return
                 if p not in self.packages:
                     self.packages.append(p)
                     output = subprocess.check_output('cd {} && spec-cleaner -i {}.spec'.
@@ -1305,7 +1329,7 @@ class myCMD(cmd.Cmd):
             f.write('%files %{python_files}\n')
             f.write('%defattr(-,root,root,-)\n')
             f.write('%doc README.rst\n')
-            f.write('%{python_sitelib}/*\n')
+            f.write('%{python_sitelib}/{}*\n.format(name)')
             f.write('#%python3_only %{{_bindir}}/{}\n'.format(name))
             f.write('%{{_bindir}}/{}\n'.format(name))
             f.write('\n')
