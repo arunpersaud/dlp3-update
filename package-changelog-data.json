@@ -300,7 +300,7 @@
     "python-pandas": "http://pandas.pydata.org/pandas-docs/stable/whatsnew.html",
     "python-pandocfilters": "git clone https://github.com/jgm/pandocfilters.git",
     "python-papyrus": "see Changelog in tar-ball",
-    "python-param": "http://ioam.github.io/param/#id1",
+    "python-param": "https://github.com/ioam/param/releases",
     "python-paramiko": "http://www.paramiko.org/changelog.html",
     "python-parso": "https://pypi.python.org/pypi/parso",
     "python-partd": "git clone https://github.com/dask/partd.git",
