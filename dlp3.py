@@ -37,6 +37,7 @@ import os
 import re
 import subprocess
 import sys
+from typing import List, Dict
 from aiohttp import ClientSession
 
 import docopt
@@ -79,7 +80,7 @@ assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory
 assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a directory"
 
 
-def get_skip():
+def get_skip() -> Dict[str, str]:
     """return a dictionary of packages that should be skipped
 
     The key is the package name and the value is a specific version
@@ -87,7 +88,7 @@ def get_skip():
     compared with natsort.
     """
 
-    SKIP = dict()
+    SKIP = dict()  # type: Dict[str, str]
     with open(skipfile, 'r') as f:
         c = "".join(f.readlines())
         if c:
@@ -95,14 +96,14 @@ def get_skip():
     return SKIP
 
 
-def get_blacklist():
+def get_blacklist() -> List[str]:
     """return a list of packages that should be skipped
 
     This is just a normal list of string, if the entry matches part of
     the name, the package will be skipped during 'check'
     """
 
-    SKIP = []
+    SKIP = []  # type: List[str]
     try:
         with open(blacklistfile, 'r') as f:
             c = "".join(f.readlines())
@@ -113,14 +114,14 @@ def get_blacklist():
     return SKIP
 
 
-def get_whitelist():
+def get_whitelist() -> List[str]:
     """return a list of packages that will be highlighted after a 'check'
 
     This is just a normal list of string, if the entry matches part of
     the name of the python package
     """
 
-    white = []
+    white = []  # type: List[str]
     try:
         with open(whitelistfile, 'r') as f:
             c = "".join(f.readlines())
@@ -131,7 +132,7 @@ def get_whitelist():
     return white
 
 
-def is_singlespec(name):
+def is_singlespec(name: str) -> bool:
     """We only want to work on singlespec, test this by looking for 'python_module()'"""
     specs = glob.glob("{}/*spec".format(os.path.join(dlp3_path, name)))
     out = []
@@ -207,9 +208,9 @@ def get_whitelist_depends():
     return depend
 
 
-def get_logs():
+def get_logs() -> Dict[str, str]:
     """return a dict with package-name->changelog location urls """
-    logs = dict()
+    logs = dict()  # type: Dict[str, str]
     with open(logfile, 'r') as f:
         c = "".join(f.readlines())
         if c:
@@ -217,7 +218,7 @@ def get_logs():
     return logs
 
 
-def print_list(l, title="packages:", links=False):
+def print_list(l: List[str], title: str="packages:", links: bool=False):
     """print a list of packages"""
     if not l:
         print("list is empty")
@@ -232,7 +233,7 @@ def print_list(l, title="packages:", links=False):
                 print("  ", p)
 
 
-def my_submit(package):
+def my_submit(package: str):
 
     if not os.path.isdir(os.path.join(myCMD.dir, package)):
         print("     WARNING: package {} doesn't exist! skipping...".format(package))
@@ -255,7 +256,7 @@ def my_submit(package):
     return worked
 
 
-def my_cleanup(package):
+def my_cleanup(package: str):
     print("updating dlp3 checkout for", package)
     try:
         output = subprocess.check_output('cd {} && osc up'.
@@ -363,7 +364,7 @@ def my_update(package, d):
                 pass
 
 
-def auto_complete_package_names(text, line):
+def auto_complete_package_names(text: str, line: str) -> List[str]:
     """autocomplete package names
 
     readline likes to split things up when it hits a '-'
@@ -405,17 +406,17 @@ class myCMD(cmd.Cmd):
         self.pending_requests = []
         self.depends = []
 
-    def do_quit(self, arg):
+    def do_quit(self, arg) -> bool:
         self.save('silent')
         print("Good Bye!")
         return True
 
-    def do_bye(self, arg):
+    def do_bye(self, arg) -> bool:
         self.save('silent')
         print("Good Bye!")
         return True
 
-    def do_exit(self, arg):
+    def do_exit(self, arg) -> bool:
         self.save('silent')
         print("Good Bye!")
         return True
@@ -477,28 +478,28 @@ class myCMD(cmd.Cmd):
                 print("can't find ", p)
         self.save('silent')
 
-    def complete_add(self, text, line, begidx, endidx):
+    def complete_add(self, text: str, line: str, begidx: int, endidx: int) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_update(self, text, line, begidx, endidx):
+    def complete_update(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_remove(self, text, line, begidx, endidx):
+    def complete_remove(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_submit(self, text, line, begidx, endidx):
+    def complete_submit(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_addlog(self, text, line, begidx, endidx):
+    def complete_addlog(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_listlog(self, text, line, begidx, endidx):
+    def complete_listlog(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_ignore(self, text, line, begidx, endidx):
+    def complete_ignore(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_removeignore(self, text, line, begidx, endidx):
+    def complete_removeignore(self, text, line, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
     def do_blacklist(self, arg):
@@ -602,7 +603,7 @@ class myCMD(cmd.Cmd):
         except:
             print("you need to supply a package name or list of package names.")
 
-    def do_addlog(self, arg):
+    def do_addlog(self, arg: str):
         """Save the location of a changelog file. The first argument should be
            the package name, the rest will be saved in a json file.
 
@@ -941,7 +942,7 @@ class myCMD(cmd.Cmd):
                     print("{} {:<25} {:<20} {}".format(nr, package, author, fromrepo))
                     self.pending_requests.append(package)
 
-    def do_update(self, arg):
+    def do_update(self, arg: str):
         """checkout these package to local branch, download new tar-ball,
            update changes and spec file
         """
@@ -1224,17 +1225,15 @@ class myCMD(cmd.Cmd):
               " {} without a patch,".format(neednopatch) +
               " {} pending SR".format(len(self.pending_requests)))
 
-    def do_remove(self, args):
+    def do_remove(self, args: str):
         """remove package form all the internal lists"""
-        args = args.split()
-        for a in args:
+        for a in args.split():
             self.good_packages = [p for p in self.good_packages if p != a]
             self.bad_packages = [p for p in self.bad_packages if p != a]
             self.packages = [p for p in self.packages if p != a]
 
-    def do_submit(self, arg):
+    def do_submit(self, arg: str):
         """Create SR for all packages that build correctly."""
-        worked = []
         to_submit = arg.split()
         print("―"*27)
         fut = [pool.submit(my_submit, p) for p in to_submit]
@@ -1349,7 +1348,7 @@ class myCMD(cmd.Cmd):
             f.write('\n')
             f.write('%changelog\n')
 
-    def save(self, arg):
+    def save(self, arg: str):
         """Save current packages, so that we can restart the program later."""
         with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
             json.dump(self.packages+self.good_packages+self.bad_packages, f, indent=4, sort_keys=True)
