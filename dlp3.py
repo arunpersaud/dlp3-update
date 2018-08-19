@@ -444,7 +444,7 @@ class myCMD(cmd.Cmd):
                                 noarch = 1
                             if '%{python_module devel}' in l.lower():
                                 devel = 1
-                            if '%{python_sitelib}/*' in l.lower():
+                            if '%{python_sitelib}/*' in l.lower() and 'dir' not in l.lower():
                                 files_section += 1
                         if noarch and devel:
                             devel_and_noarch += 1
