@@ -26,7 +26,6 @@ Options:
 """
 
 import asyncio
-from aiohttp import ClientSession
 import cmd
 import configparser
 from collections import defaultdict
@@ -38,6 +37,7 @@ import os
 import re
 import subprocess
 import sys
+from aiohttp import ClientSession
 
 import docopt
 import natsort
@@ -132,6 +132,7 @@ def get_whitelist():
 
 
 def is_singlespec(name):
+    """We only want to work on singlespec, test this by looking for 'python_module()'"""
     specs = glob.glob("{}/*spec".format(os.path.join(dlp3_path, name)))
     out = []
     for spec in specs:
@@ -150,6 +151,7 @@ def is_singlespec(name):
 
 
 def get_whitelist_depends():
+    """Find all dependencies for packages that are whitelisted"""
     orig = get_whitelist()
     depend = set()
     to_check = orig
@@ -665,7 +667,7 @@ class myCMD(cmd.Cmd):
                     p != ".osc" and
                     p not in existing]
 
-        if len(packages) == 0:
+        if not packages:
             print("Nothing to clean up")
             return
 
@@ -686,21 +688,26 @@ class myCMD(cmd.Cmd):
         self.save('silent')
 
     def do_list(self, arg):
+        """List all packages"""
         print_list(self.good_packages+self.packages+self.bad_packages)
 
     def do_links(self, arg):
+        """Print links to the build server for all packages"""
         print_list(self.good_packages+self.packages+self.bad_packages, links=True)
 
     def do_listdev(self, arg):
         print_list(self.dev_packages, title="dev:")
 
     def do_good(self, arg):
+        """List packages that build correclty"""
         print_list(self.good_packages, title="good:")
 
     def do_bad(self, arg):
+        """List packages that have build problems"""
         print_list(self.bad_packages, title="bad:")
 
     def do_pending(self, arg):
+        """List pending packages"""
         print_list(self.pending_requests, title="pending:")
 
     def check_package(self, p):
@@ -881,6 +888,7 @@ class myCMD(cmd.Cmd):
         self.do_status('')
 
     def do_check_pending(self, arg=None):
+        """Look up pending SR"""
         print("Checking my pending SR")
         try:
             output = subprocess.check_output("osc my", shell=True)
@@ -1028,7 +1036,9 @@ class myCMD(cmd.Cmd):
                     if not url and l.startswith("Source") and "version" in l:
                         url = l.split(":", maxsplit=1)[1].strip()
                         parts = l.split("/")
-                        if len(parts) > 6 and (parts[2] == "pypi.python.org" or parts[2] == "files.pythonhosted.org"):
+                        if (len(parts) > 6
+                            and (parts[2] == "pypi.python.org"
+                                 or parts[2] == "files.pythonhosted.org")):
                             name = parts[6]
                     if not singlespec and "python_module" in l:
                         singlespec = True
@@ -1170,7 +1180,8 @@ class myCMD(cmd.Cmd):
                 self.need_update[p] = d
         if dependout:
             print("")
-            print("Whitelisted packages dependencies that need an update: ({} packages)".format(len(dependout)))
+            print("Whitelisted packages dependencies that",
+                  "need an update: ({} packages)".format(len(dependout)))
             for i in dependout:
                 print(i)
             print("")
@@ -1270,7 +1281,10 @@ class myCMD(cmd.Cmd):
         except:
             print("couldn't download package; url=", url)
 
-        with open(os.path.join(dlp3_branch_path, 'python-{}'.format(name), 'python-{}.spec'.format(name)), 'w') as f:
+        newspecfile = os.path.join(dlp3_branch_path,
+                                   'python-{}'.format(name),
+                                   'python-{}.spec'.format(name))
+        with open(newspecfile, 'w') as f:
             f.write('#\n')
             f.write('# spec file for package python-{}\n'.format(name))
             f.write('#\n')
