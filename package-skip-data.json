@@ -45,6 +45,7 @@
     "python-tox-doc": "-",
     "python-virtualenv-doc": "-",
     "python-xlwt-doc": "-",
+    "python-yubico": "1.6.2",
     "python-zope.component-doc": "-",
     "python-zope.deprecation-doc": "-"
 }
