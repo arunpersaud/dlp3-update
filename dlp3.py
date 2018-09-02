@@ -19,10 +19,11 @@
 """DLP3
 
 Usage:
-dlp3.py [-n |--no-check]
+dlp3.py [-n |--no-check] [-s <projectname>]
 
 Options:
--n --no-check    Skip checking for which updates are available
+-n --no-check      Skip checking for which updates are available
+-s <projectname>   Work on subproject, e.g. numeric or flask
 """
 
 import asyncio
@@ -45,6 +46,14 @@ import natsort
 import requests
 from termcolor import colored
 
+commands = docopt.docopt(__doc__, version='dlp3.py 0.9')
+subproject = commands['-s']
+if subproject is None:
+    subproject = 'DEFAULT'
+    subproject_path = ''
+else:
+    subproject_path = ':'+subproject
+
 # some tasks are done in parallel via concurrent.futures
 pool = concurrent.futures.ThreadPoolExecutor(max_workers=7)
 
@@ -64,16 +73,16 @@ if not conf_file:
     sys.exit(1)
 
 try:
-    dlp3_path = config['DEFAULT']['dlp3']
-    dlp3_branch_path = config['DEFAULT']['branch']
-    dlp3_web_branch = config['DEFAULT']['webbranch']
+    dlp3_path = config[subproject]['dlp3']
+    dlp3_branch_path = config[subproject]['branch']
+    dlp3_web_branch = config[subproject]['webbranch']
     bindir = os.path.dirname(os.path.realpath(__file__))
     logfile = os.path.join(bindir, 'package-changelog-data.json')
     skipfile = os.path.join(bindir, 'package-skip-data.json')
     blacklistfile = os.path.join(bindir, 'package-blacklist.json')
     whitelistfile = os.path.join(bindir, 'package-whitelist.json')
 except (TypeError, KeyError):
-    print("ERROR: Path for dlp3 and branch not found in DEFAULT section")
+    print('ERROR: Path for dlp3 and branch not found in {} section'.format(subproject))
     sys.exit(2)
 
 assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory"
@@ -712,7 +721,7 @@ class myCMD(cmd.Cmd):
         print_list(self.pending_requests, title="pending:")
 
     def check_package(self, p):
-        cmd_dlp = 'osc results devel:languages:python {}'.format(p)
+        cmd_dlp = 'osc results devel:languages:python{} {}'.format(subproject_path, p)
         cmd_update = 'cd {} && osc results'.format(os.path.join(myCMD.dir, p))
 
         skip_status = defaultdict(lambda: defaultdict(list))
@@ -919,7 +928,7 @@ class myCMD(cmd.Cmd):
         print("Checking pending SR in dlp")
         try:
             output = subprocess.check_output(
-                'osc request list -s "new,review" devel:languages:python', shell=True)
+                'osc request list -s "new,review" devel:languages:python{}'.format(subproject_path), shell=True)
         except subprocess.CalledProcessError:
             return
         output = output.decode('utf8')
@@ -1371,7 +1380,6 @@ class myCMD(cmd.Cmd):
                     self.packages.remove(p)
 
 
-commands = docopt.docopt(__doc__, version='dlp3.py 0.9')
 A = myCMD()
 A.load('silent')
 A.do_depend('silent')
