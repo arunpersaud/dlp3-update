@@ -445,6 +445,7 @@ class myCMD(cmd.Cmd):
                 # do some error checking
                 local_specs = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))
                 devel_and_noarch = 0
+                subpackages = 0
                 files_section = 0
                 for s in local_specs:
                     with open(s, 'r') as f:
@@ -452,8 +453,10 @@ class myCMD(cmd.Cmd):
                         devel = 0
                         noarch = 0
                         for l in lines:
-                            if 'noarch' in l.lower():
+                            if 'noarch' in l.lower() and 'buildarch:' in l.lower() and not subpackages:
                                 noarch = 1
+                            if l.lower().startswith('%package'):
+                                subpackages = 1
                             if '%{python_module devel}' in l.lower():
                                 devel = 1
                             if '%{python_sitelib}/*' in l.lower() and 'dir' not in l.lower():
