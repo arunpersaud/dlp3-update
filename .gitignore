@@ -2,3 +2,4 @@ dlp3.conf
 *~
 package-blacklist.json
 package-whitelist.json
+.mypy_cache
