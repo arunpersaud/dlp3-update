@@ -227,7 +227,7 @@ def get_logs() -> Dict[str, str]:
     return logs
 
 
-def print_list(l: List[str], title: str="packages:", links: bool=False):
+def print_list(l: List[str], title: str = "packages:", links: bool = False):
     """print a list of packages"""
     if not l:
         print("list is empty")
@@ -250,8 +250,8 @@ def my_submit(package: str):
 
     print("    ", package)
     worked = None
-    output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package)) +
-                                     ' && osc submitrequest --yes -m "update to latest version"',
+    output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package))
+                                     + ' && osc submitrequest --yes -m "update to latest version"',
                                      shell=True)
     output = output.decode('utf8')
     for line in output.split('\n'):
@@ -387,9 +387,9 @@ def auto_complete_package_names(text: str, line: str) -> List[str]:
     # skip the beginning if we already have it on the line
     l = len(lastword)
     packages = [p[l:] for p in os.listdir(myCMD.dir)
-                if os.path.isdir(os.path.join(dlp3_branch_path, p)) and
-                p != ".osc" and
-                p.startswith(lastword+text)]
+                if os.path.isdir(os.path.join(dlp3_branch_path, p))
+                and p != ".osc"
+                and p.startswith(lastword+text)]
     return packages
 
 
@@ -435,8 +435,8 @@ class myCMD(cmd.Cmd):
         if arg == "all":
             packages = os.listdir(myCMD.dir)
             packages = [p for p in packages
-                        if os.path.isdir(os.path.join(myCMD.dir, p)) and
-                        p != ".osc"]
+                        if os.path.isdir(os.path.join(myCMD.dir, p))
+                        and p != ".osc"]
         else:
             packages = arg.split()
         for p in packages:
@@ -586,8 +586,8 @@ class myCMD(cmd.Cmd):
             if arg in skip:
                 print("  {} {}".format(arg, skip[arg]))
             else:
-                print("Currently not ignoring {}. If you want to add it, ".format(arg) +
-                      "provide a version number or '-' (for all versions).")
+                print("Currently not ignoring {}. If you want to add it, ".format(arg)
+                      + "provide a version number or '-' (for all versions).")
         else:
             try:
                 name, version = arg.split(" ", maxsplit=1)
@@ -598,8 +598,8 @@ class myCMD(cmd.Cmd):
                 with open(skipfile, 'w') as f:
                     json.dump(skip, f, indent=4, sort_keys=True)
             except:
-                print("you need to supply a package name and a version number," +
-                      " use '-' for all versions.")
+                print("you need to supply a package name and a version number,"
+                      + " use '-' for all versions.")
 
     def do_removeignore(self, arg):
         """remove a package from the ignore list"""
@@ -643,8 +643,8 @@ class myCMD(cmd.Cmd):
         if arg == "":
             packages = os.listdir(myCMD.dir)
             packages = [p for p in packages
-                        if os.path.isdir(os.path.join(myCMD.dir, p)) and
-                        p != ".osc"]
+                        if os.path.isdir(os.path.join(myCMD.dir, p))
+                        and p != ".osc"]
         elif arg == "all":
             packages = [p for p in logs]
         else:
@@ -676,9 +676,9 @@ class myCMD(cmd.Cmd):
 
         packages = os.listdir(myCMD.dir)
         packages = [p for p in packages
-                    if os.path.isdir(os.path.join(dlp3_branch_path, p)) and
-                    p != ".osc" and
-                    p not in existing]
+                    if os.path.isdir(os.path.join(dlp3_branch_path, p))
+                    and p != ".osc"
+                    and p not in existing]
 
         if not packages:
             print("Nothing to clean up")
@@ -893,8 +893,8 @@ class myCMD(cmd.Cmd):
             myCMD.prompt = "Monitor> "
         # recreate list
         self.packages = [p for p in tocheck
-                         if p not in self.good_packages and
-                         p not in self.bad_packages]
+                         if p not in self.good_packages
+                         and p not in self.bad_packages]
 
     def emptyline(self):
         """Give status information on enter"""
@@ -1049,9 +1049,9 @@ class myCMD(cmd.Cmd):
                     if not url and l.startswith("Source") and "version" in l:
                         url = l.split(":", maxsplit=1)[1].strip()
                         parts = l.split("/")
-                        if (len(parts) > 6
-                            and (parts[2] == "pypi.python.org"
-                                 or parts[2] == "files.pythonhosted.org")):
+                        if (len(parts) > 6 and
+                            (parts[2] == "pypi.python.org" or
+                                 parts[2] == "files.pythonhosted.org")):
                             name = parts[6]
                     if not singlespec and "python_module" in l:
                         singlespec = True
@@ -1127,10 +1127,10 @@ class myCMD(cmd.Cmd):
                 old = old.split("+")[0]
             if old == new:
                 good += 1
-            if new is not None and ("dev" in new or
-                                    "rc" in new or
-                                    "post" in new or
-                                    "git" in new):
+            if new is not None and ("dev" in new
+                                    or "rc" in new
+                                    or "post" in new
+                                    or "git" in new):
                 dev += 1
                 self.dev_packages.append(p+" "+new)
                 continue
@@ -1149,8 +1149,8 @@ class myCMD(cmd.Cmd):
                 if skipversion == '-':
                     continue
                 # if version is newer, remove from skip otherwise skip
-                if new is not None and (skipversion == natsort.natsorted([new, skipversion])[0] and
-                                        new != skipversion):
+                if new is not None and (skipversion == natsort.natsorted([new, skipversion])[0]
+                                        and new != skipversion):
                     result = skip.pop(p, None)
                     if result:
                         extra = " (removed from ignore list)"
@@ -1231,11 +1231,11 @@ class myCMD(cmd.Cmd):
                 version2 = ''
             if version1 == natsort.natsorted([version1, version2])[0]:
                 print(p, "local: ", version1, "  dlp: ", version2, dlp3_web_branch+p)
-        print("Found {} up to date packages,".format(good) +
-              " {} with a dev release, ".format(dev) +
-              "and {} packages that need an update,\n".format(need) +
-              " {} without a patch,".format(neednopatch) +
-              " {} pending SR".format(len(self.pending_requests)))
+        print("Found {} up to date packages,".format(good)
+              + " {} with a dev release, ".format(dev)
+              + "and {} packages that need an update,\n".format(need)
+              + " {} without a patch,".format(neednopatch)
+              + " {} pending SR".format(len(self.pending_requests)))
 
     def do_remove(self, args: str):
         """remove package form all the internal lists"""
@@ -1280,8 +1280,8 @@ class myCMD(cmd.Cmd):
             return
         print('got version:', version)
         print('got ending:', ending)
-        subprocess.check_output('cd {}'.format(myCMD.dir) +
-                                ' && osc mkpac python-{}'.format(name),
+        subprocess.check_output('cd {}'.format(myCMD.dir)
+                                + ' && osc mkpac python-{}'.format(name),
                                 shell=True)
         try:
             r = requests.get(url, verify=True)
