@@ -1217,24 +1217,27 @@ class myCMD(cmd.Cmd):
 
     def save(self, arg: str):
         """Save current packages, so that we can restart the program later."""
-        with (Path('~/.config/dlp3/').expanduser() / 'current.json').open('w') as f:
+        with (Path('~/.config/dlp3/').expanduser() / f'current-{subproject}.json').open('w') as f:
             json.dump(self.packages+self.good_packages+self.bad_packages, f, indent=4, sort_keys=True)
             if arg != 'silent':
                 print("Saved package list for next run. Use 'load' to read the list back")
 
     def load(self, arg):
         """Load last list of packages."""
-        with (Path('~/.config/dlp3/').expanduser() / 'current.json').open() as f:
-            c = "".join(f.readlines())
-            if c:
-                self.packages = json.loads(c)
+        filename = Path('~/.config/dlp3/').expanduser() / 'current-{subproject}.json'
+        if not filename.is_file():
+            print('No saved list of packages')
+            return
+
+        with filename.open() as f:
+            self.packages = json.load(f)
             if arg != 'silent':
                 print("Loaded package list")
 
             packs = list(myCMD.dir.iterdir())
             for p in self.packages:
                 if p not in packs:
-                    print("Package {} doesn't exist anymore... remove it from list.")
+                    print(f"Package {p} doesn't exist anymore... removing it from list.")
                     self.packages.remove(p)
 
 
