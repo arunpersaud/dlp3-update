@@ -46,6 +46,8 @@ import natsort
 import requests
 from termcolor import colored
 
+from dlp3.json import JsonDict, JsonList
+
 commands = docopt.docopt(__doc__, version='dlp3.py 0.9')
 subproject = commands['-s']
 if subproject is None:
@@ -77,68 +79,16 @@ try:
     dlp3_branch_path = Path(config[subproject]['branch'])
     dlp3_web_branch = config[subproject]['webbranch']
     bindir = Path(__file__).resolve().parent
-    logfile = bindir/ 'package-changelog-data.json'
-    skipfile = bindir/ 'package-skip-data.json'
-    blacklistfile = bindir/ 'package-blacklist.json'
-    whitelistfile = bindir/ 'package-whitelist.json'
+    logfile = JsonDict(bindir/'package-changelog-data.json')
+    skipfile = JsonDict(bindir/ 'package-skip-data.json')
+    blacklistfile = JsonList(bindir/'package-blacklist.json')
+    whitelistfile = JsonList(bindir/'package-whitelist.json')
 except (TypeError, KeyError):
     print(f'ERROR: Path for dlp3 and branch not found in {subproject} section')
     sys.exit(2)
 
 assert dlp3_path.is_dir(), "Path to dlp3 in config file is not a directory"
 assert dlp3_branch_path.is_dir(), "Path to branch in config file is not a directory"
-
-def load_json(filename:str):
-    """Load json file"""
-    with open(filename) as f:
-        return json.load(f)
-
-
-def get_skip() -> Dict[str, str]:
-    """return a dictionary of packages that should be skipped
-
-    The key is the package name and the value is a specific version
-    number or "-" for all version.  The version number will be
-    compared with natsort.
-    """
-
-    try:
-        return load_json(skipfile)
-    except OSError:
-        return {}
-
-
-def get_blacklist() -> List[str]:
-    """return a list of packages that should be skipped
-
-    This is just a normal list of string, if the entry matches part of
-    the name, the package will be skipped during 'check'
-    """
-
-    try:
-        return load_json(blacklistfile)
-    except OSError:
-        return []
-
-
-def get_whitelist() -> List[str]:
-    """return a list of packages that will be highlighted after a 'check'
-
-    This is just a normal list of string, if the entry matches part of
-    the name of the python package
-    """
-
-    try:
-        return load_json(whitelistfile)
-    except OSError:
-        return []
-
-def get_logs() -> Dict[str, str]:
-    """return a dict with package-name->changelog location urls """
-    try:
-        return load_json(logfile)
-    except OSError:
-        return {}
 
 
 def is_singlespec(name: str) -> bool:
@@ -162,7 +112,7 @@ def is_singlespec(name: str) -> bool:
 
 def get_whitelist_depends():
     """Find all dependencies for packages that are whitelisted"""
-    orig = get_whitelist()
+    orig = whitelistfile.load()
     depend = set()
     to_check = orig
     # get list that we need to check
@@ -233,7 +183,6 @@ def print_list(l: List[str], title: str = "packages:", links: bool = False):
 
 
 def my_submit(package: str):
-
     if not (myCMD.dir / package).is_dir():
         print(f"     WARNING: package {package} doesn't exist! skipping...")
         return None
@@ -263,8 +212,7 @@ def my_cleanup(package: str):
                                          shell=True)
     except:
         # package didn't exist yet, create a new checkout
-        output = subprocess.check_output('cd {} && osc co {}'.
-                                         format(dlp3_path / package),
+        output = subprocess.check_output(f'cd {dlp3_path / package} && osc co {dlp3_path / package}',
                                          shell=True)
     print(output.decode('utf8'))
 
@@ -479,30 +427,30 @@ class myCMD(cmd.Cmd):
     def complete_add(self, text: str, line: str, begidx: int, endidx: int) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_update(self, text, line, begidx, endidx) -> List[str]:
+    def complete_update(self, text: str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_remove(self, text, line, begidx, endidx) -> List[str]:
+    def complete_remove(self, text:str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_submit(self, text, line, begidx, endidx) -> List[str]:
+    def complete_submit(self, text:str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_addlog(self, text, line, begidx, endidx) -> List[str]:
+    def complete_addlog(self, text:str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_listlog(self, text, line, begidx, endidx) -> List[str]:
+    def complete_listlog(self, text:str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_ignore(self, text, line, begidx, endidx) -> List[str]:
+    def complete_ignore(self, text:str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
-    def complete_removeignore(self, text, line, begidx, endidx) -> List[str]:
+    def complete_removeignore(self, text:str, line:str, begidx, endidx) -> List[str]:
         return auto_complete_package_names(text, line)
 
     def do_blacklist(self, arg):
         """print the blacklisted packages or adds a package to the list"""
-        skip = get_blacklist()
+        skip = blacklistfile.load()
         if arg == "":
             if not skip:
                 print("Currently not blacklisting any packages.")
@@ -513,16 +461,12 @@ class myCMD(cmd.Cmd):
         else:
             name = arg.strip()
             print(f"Added {name} to the blacklist.")
-            if not skip:
-                skip = [name]
-            else:
-                skip.append(name)
-            with blacklistfile.open('w') as f:
-                json.dump(skip, f, indent=4, sort_keys=True)
+            blacklistfile.append(name)
+            blacklistfile.save()
 
     def do_whitelist(self, arg):
         """print the whitelisted packages or adds a package to the list"""
-        white = get_whitelist()
+        white = whitelistfile.load()
         if arg == "":
             if not white:
                 print("Currently not whitelisting any packages.")
@@ -537,8 +481,7 @@ class myCMD(cmd.Cmd):
                 white = [name]
             else:
                 white.append(name)
-            with whitelistfile.open('w') as f:
-                json.dump(white, f, indent=4, sort_keys=True)
+            whitelistfile.save()
 
     def do_depend(self, arg):
         """print packages the whitelisted packages depend on"""
@@ -560,7 +503,7 @@ class myCMD(cmd.Cmd):
 
     def do_ignore(self, arg):
         """print the ignore list or adds a package to the list"""
-        skip = get_skip()
+        skip = skipfile.load()
         if arg == "":
             if not skip:
                 print("Currently not ignoring any packages.")
@@ -579,25 +522,22 @@ class myCMD(cmd.Cmd):
                 name, version = arg.split(" ", maxsplit=1)
                 name = name.strip()
                 version = version.strip()
-                skip[name] = version
+                skipfile[name] = version
                 print(f"Added {name} {version} to ignore list.")
-                with skipfile.open('w') as f:
-                    json.dump(skip, f, indent=4, sort_keys=True)
+                skipfile.save()
             except:
                 print("you need to supply a package name and a version number,"
                       + " use '-' for all versions.")
 
     def do_removeignore(self, arg):
         """remove a package from the ignore list"""
-        skip = get_skip()
         packages = arg.split()
         try:
             for p in packages:
-                result = skip.pop(p, None)
+                result = skipfile.pop(p, None)
                 if result:
                     print(f"removed {p} from ignore list")
-            with skipfile.open('w') as f:
-                json.dump(skip, f, indent=4, sort_keys=True)
+            skipfile.save()
         except:
             print("you need to supply a package name or list of package names.")
 
@@ -606,15 +546,13 @@ class myCMD(cmd.Cmd):
            the package name, the rest will be saved in a json file.
 
         """
-        logs = get_logs()
         try:
             name, url = arg.split(" ", maxsplit=1)
             name = name.strip()
             url = url.strip(' \'"')
-            logs[name] = url
+            logfile[name] = url
             print(f"Added log file for {name}.")
-            with open(logfile, 'w') as f:
-                json.dump(logs, f, indent=4, sort_keys=True)
+            logfile.save()
         except:
             print("you need to supply a package name and a url or string")
 
@@ -624,7 +562,7 @@ class myCMD(cmd.Cmd):
            branched packages
 
         """
-        logs = get_logs()
+        logs = logfile.load()
         packages = []
         if arg == "":
             packages = list(myCMD.dir.iterdir())
@@ -967,7 +905,7 @@ class myCMD(cmd.Cmd):
            packages.
 
         """
-        logs = get_logs()
+        logs = logfile.load()
 
         # list of packages to check
         show_all = False  # only show whitelisted and their dependencies
@@ -988,7 +926,7 @@ class myCMD(cmd.Cmd):
         packages = [p for p in packages if p not in self.pending_requests]
 
         # there are too many packages in dlp, have an option to skip patterns
-        blacklist = get_blacklist()
+        blacklist = blacklistfile.load()
         packages = [p for p in packages if p not in blacklist]
 
         # packages I'm already preparing an update for
@@ -1095,7 +1033,7 @@ class myCMD(cmd.Cmd):
         dev = 0
         need = 0
         neednopatch = 0
-        whitelist = get_whitelist()
+        whitelist = whitelistfile.load()
         whiteout = []
         dependout = []
         self.need_update = {}
@@ -1124,7 +1062,7 @@ class myCMD(cmd.Cmd):
                 continue
 
             # check if this package is in the skip list
-            skip = get_skip()
+            skip = skipfile.load()
             extra = ""
             if p in skip:
                 skipversion = skip[p]
@@ -1133,11 +1071,10 @@ class myCMD(cmd.Cmd):
                 # if version is newer, remove from skip otherwise skip
                 if new is not None and (skipversion == natsort.natsorted([new, skipversion])[0]
                                         and new != skipversion):
-                    result = skip.pop(p, None)
+                    result = skipfile.pop(p, None)
                     if result:
                         extra = " (removed from ignore list)"
-                        with skipfile.open('w') as f:
-                            json.dump(skip, f, indent=4, sort_keys=True)
+                        skipfile.save()
                 else:
                     continue
             if p in PENDING:
