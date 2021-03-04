@@ -82,8 +82,8 @@ try:
     bindir = Path(__file__).resolve().parent
     logfile = JsonDict(bindir/'package-changelog-data.json')
     skipfile = JsonDict(bindir/ 'package-skip-data.json')
-    blacklistfile = JsonList(bindir/'package-blacklist.json')
-    whitelistfile = JsonList(bindir/'package-whitelist.json')
+    blacklistfile = JsonList(bindir/'package-blacklist.json', name='blacklist')
+    whitelistfile = JsonList(bindir/'package-whitelist.json', name='whitelist')
 except (TypeError, KeyError):
     print(f'ERROR: Path for dlp3 and branch not found in {subproject} section')
     sys.exit(2)
@@ -381,11 +381,10 @@ class myCMD(cmd.Cmd):
             if (myCMD.dir/ p).is_dir():
                 print("adding ", p)
                 # do some error checking
-                local_specs = (dlp3_branch_path/ p).glob("*spec")
                 devel_and_noarch = 0
                 subpackages = 0
                 files_section = 0
-                for s in local_specs:
+                for s in (dlp3_branch_path/ p).glob("*spec"):
                     with open(s) as f:
                         lines = f.readlines()
                         devel = 0
@@ -451,14 +450,8 @@ class myCMD(cmd.Cmd):
 
     def do_blacklist(self, arg):
         """print the blacklisted packages or adds a package to the list"""
-        skip = blacklistfile.load()
         if arg == "":
-            if not skip:
-                print("Currently not blacklisting any packages.")
-            else:
-                print("Currently blacklisting the following packages")
-                for p in skip:
-                    print(f"  {p}")
+            blacklistfile.print()
         else:
             name = arg.strip()
             print(f"Added {name} to the blacklist.")
@@ -467,21 +460,12 @@ class myCMD(cmd.Cmd):
 
     def do_whitelist(self, arg):
         """print the whitelisted packages or adds a package to the list"""
-        white = whitelistfile.load()
         if arg == "":
-            if not white:
-                print("Currently not whitelisting any packages.")
-            else:
-                print("Currently whitelisting the following packages")
-                for p in white:
-                    print(f"  {p}")
+            whitelistfile.print()
         else:
             name = arg.strip()
             print(f"Added {name} to the whitelist.")
-            if not white:
-                white = [name]
-            else:
-                white.append(name)
+            whitelistfile.append(name)
             whitelistfile.save()
 
     def do_depend(self, arg):
@@ -511,10 +495,10 @@ class myCMD(cmd.Cmd):
             else:
                 print("Currently ignoring the following packages")
                 for p in skip:
-                    print("  {} {}".format(p, skip[p]))
+                    print(f"  {p} {skip[p]}")
         elif " " not in arg:
             if arg in skip:
-                print("  {} {}".format(arg, skip[arg]))
+                print(f"  {arg} {skip[arg]}")
             else:
                 print(f"Currently not ignoring {arg}. If you want to add it, "
                       + "provide a version number or '-' (for all versions).")
@@ -927,8 +911,7 @@ class myCMD(cmd.Cmd):
         packages = [p for p in packages if p not in self.pending_requests]
 
         # there are too many packages in dlp, have an option to skip patterns
-        blacklist = blacklistfile.load()
-        packages = [p for p in packages if p not in blacklist]
+        packages = [p for p in packages if p not in blacklistfile]
 
         # packages I'm already preparing an update for
         PENDING = [i.name for i in dlp3_branch_path.glob("*") if not i.name.startswith(".")]
