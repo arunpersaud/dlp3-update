@@ -32,9 +32,9 @@ import configparser
 from collections import defaultdict
 import concurrent.futures
 from datetime import datetime
-import glob
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
@@ -60,7 +60,7 @@ pool = concurrent.futures.ThreadPoolExecutor(max_workers=7)
 # read path information from config file
 config = configparser.ConfigParser()
 conf_file = config.read(['dlp3.conf',
-                         os.path.expanduser('~/.config/dlp3/dlp3.conf')])
+                         Path('~/.config/dlp3/dlp3.conf').expanduser()])
 
 if not conf_file:
     print("Couldn't find dlp3.conf")
@@ -73,27 +73,25 @@ if not conf_file:
     sys.exit(1)
 
 try:
-    dlp3_path = config[subproject]['dlp3']
-    dlp3_branch_path = config[subproject]['branch']
+    dlp3_path = Path(config[subproject]['dlp3'])
+    dlp3_branch_path = Path(config[subproject]['branch'])
     dlp3_web_branch = config[subproject]['webbranch']
-    bindir = os.path.dirname(os.path.realpath(__file__))
-    logfile = os.path.join(bindir, 'package-changelog-data.json')
-    skipfile = os.path.join(bindir, 'package-skip-data.json')
-    blacklistfile = os.path.join(bindir, 'package-blacklist.json')
-    whitelistfile = os.path.join(bindir, 'package-whitelist.json')
+    bindir = Path(__file__).resolve().parent
+    logfile = bindir/ 'package-changelog-data.json'
+    skipfile = bindir/ 'package-skip-data.json'
+    blacklistfile = bindir/ 'package-blacklist.json'
+    whitelistfile = bindir/ 'package-whitelist.json'
 except (TypeError, KeyError):
     print(f'ERROR: Path for dlp3 and branch not found in {subproject} section')
     sys.exit(2)
 
-assert os.path.isdir(dlp3_path), "Path to dlp3 in config file is not a directory"
-assert os.path.isdir(dlp3_branch_path), "Path to branch in config file is not a directory"
-
+assert dlp3_path.is_dir(), "Path to dlp3 in config file is not a directory"
+assert dlp3_branch_path.is_dir(), "Path to branch in config file is not a directory"
 
 def load_json(filename:str):
     """Load json file"""
     with open(filename) as f:
         return json.load(f)
-
 
 
 def get_skip() -> Dict[str, str]:
@@ -131,7 +129,7 @@ def get_whitelist() -> List[str]:
     """
 
     try:
-        return load_json(blacklistfile)
+        return load_json(whitelistfile)
     except OSError:
         return []
 
@@ -145,7 +143,7 @@ def get_logs() -> Dict[str, str]:
 
 def is_singlespec(name: str) -> bool:
     """We only want to work on singlespec, test this by looking for 'python_module()'"""
-    specs = glob.glob("{}/*spec".format(os.path.join(dlp3_path, name)))
+    specs = (dlp3_path/ name).glob("*spec")
     out = []
     for spec in specs:
         with open(spec) as f:
@@ -170,7 +168,7 @@ def get_whitelist_depends():
     # get list that we need to check
     while to_check:
         p = to_check.pop()
-        specs = glob.glob("{}/*spec".format(os.path.join(dlp3_path, "*"+p)))
+        specs = dlp3_path.glob(f"*{p}/*spec")
         for spec in specs:
             with open(spec) as f:
                 lines = f.readlines()
@@ -236,13 +234,13 @@ def print_list(l: List[str], title: str = "packages:", links: bool = False):
 
 def my_submit(package: str):
 
-    if not os.path.isdir(os.path.join(myCMD.dir, package)):
+    if not (myCMD.dir / package).is_dir():
         print(f"     WARNING: package {package} doesn't exist! skipping...")
         return None
 
     print("    ", package)
     worked = None
-    output = subprocess.check_output('cd {}'.format(os.path.join(myCMD.dir, package))
+    output = subprocess.check_output(f'cd {myCMD.dir / package}'
                                      + ' && osc submitrequest --yes -m "update to latest version"',
                                      shell=True)
     output = output.decode('utf8')
@@ -260,14 +258,13 @@ def my_submit(package: str):
 def my_cleanup(package: str):
     print("updating dlp3 checkout for", package)
     try:
-        output = subprocess.check_output('cd {} && osc up'.
-                                         format(os.path.join(dlp3_path, package)),
+        output = subprocess.check_output(f'cd {dlp3_path / package} && osc up',
                                          stderr=subprocess.DEVNULL,
                                          shell=True)
     except:
         # package didn't exist yet, create a new checkout
         output = subprocess.check_output('cd {} && osc co {}'.
-                                         format(dlp3_path, package),
+                                         format(dlp3_path / package),
                                          shell=True)
     print(output.decode('utf8'))
 
@@ -282,16 +279,16 @@ def my_update(package, d):
 
     if dlp3_branch_path in specfile:
         print("updating already branched package")
-        os.system("cd {} && osc up".format(os.path.join(dlp3_branch_path, package)))
+        os.system(f"cd {dlp3_branch_path/ package} && osc up")
     else:
         print("branching ", package)
 
         # cd into dpl3 package, clone and checkout
         # os.chdir is not threadsafe, so don't use it
-        os.system("cd {} && osc branch".format(os.path.join(dlp3_path, package)))
+        os.system(f"cd {dlp3_path / package} && osc branch")
         os.system(f"cd {dlp3_branch_path} && osc co {package}")
 
-    branchdir = os.path.join(dlp3_branch_path, package)
+    branchdir = dlp3_branch_path / package
 
     # download new source
     print("downloading")
@@ -299,11 +296,11 @@ def my_update(package, d):
     try:
         r = requests.get(url, verify=True)
         # use absolut url to make it thread-safe
-        with open(os.path.join(branchdir, url.split("/")[-1]), 'wb') as f:
+        with (branchdir/ url.split("/")[-1]).open('wb') as f:
             f.write(r.content)
         print("download successful")
     except:
-        print("couldn't download", package, "at url", url)
+        print(f"couldn't download {package} at url {url}")
         return
 
     # add new package, remove old one
@@ -320,7 +317,7 @@ def my_update(package, d):
     files = [spec, spec.replace(".spec", "-doc.spec")]
     for file in files:
         try:
-            with open(os.path.join(branchdir, file), "r+") as myinput:
+            with (branchdir / file).open("r+") as myinput:
                 content = myinput.readlines()
                 myinput.seek(0)
                 for line in content:
@@ -355,7 +352,7 @@ def my_update(package, d):
         files = [spec.replace(".spec", ".changes"), spec.replace(".spec", "-doc.changes")]
         for file in files:
             try:
-                with open(os.path.join(branchdir, file), "r+") as changes:
+                with (branchdir/ file).open("r+") as changes:
                     content = changes.readlines()
                     changes.seek(0)
                     changes.write(changelog)
@@ -378,8 +375,8 @@ def auto_complete_package_names(text: str, line: str) -> List[str]:
         lastword = lastword[:-len(text)]
     # skip the beginning if we already have it on the line
     l = len(lastword)
-    packages = [p[l:] for p in os.listdir(myCMD.dir)
-                if os.path.isdir(os.path.join(dlp3_branch_path, p))
+    packages = [p[l:] for p in myCMD.dir.iterdir()
+                if (dlp3_branch_path/ p).is_dir()
                 and p != ".osc"
                 and p.startswith(lastword+text)]
     return packages
@@ -425,17 +422,17 @@ class myCMD(cmd.Cmd):
     def do_add(self, arg):
         """Start monitoring the build status for the given package(s)."""
         if arg == "all":
-            packages = os.listdir(myCMD.dir)
+            packages = lists(myCMD.dir.iterdir())
             packages = [p for p in packages
-                        if os.path.isdir(os.path.join(myCMD.dir, p))
+                        if (myCMD.dir/ p).is_dir()
                         and p != ".osc"]
         else:
             packages = arg.split()
         for p in packages:
-            if os.path.isdir(os.path.join(myCMD.dir, p)):
+            if (myCMD.dir/ p).is_dir():
                 print("adding ", p)
                 # do some error checking
-                local_specs = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))
+                local_specs = (dlp3_branch_path/ p).glob("*spec")
                 devel_and_noarch = 0
                 subpackages = 0
                 files_section = 0
@@ -463,16 +460,13 @@ class myCMD(cmd.Cmd):
                     return
                 if p not in self.packages:
                     self.packages.append(p)
-                    output = subprocess.check_output('cd {} && spec-cleaner -i {}.spec'.
-                                                     format(os.path.join(dlp3_branch_path, p), p),
+                    output = subprocess.check_output(f'cd {dlp3_branch_path/ p} && spec-cleaner -i {p}.spec',
                                                      shell=True)
-                    if os.path.isfile(os.path.join(myCMD.dir, p, p+'-doc.spec')):
-                        output = subprocess.check_output('cd {} && spec-cleaner -i {}-doc.spec'.
-                                                         format(os.path.join(dlp3_branch_path, p), p),
+                    if (myCMD.dir/ p / p+'-doc.spec').is_file():
+                        output = subprocess.check_output(f'cd {dlp3_branch_path/ p} && spec-cleaner -i {p}-doc.spec',
                                                          shell=True)
                     try:
-                        output = subprocess.check_output('cd {} && osc ci -n'.
-                                                         format(os.path.join(dlp3_branch_path, p)),
+                        output = subprocess.check_output(f'cd {dlp3_branch_path/ p} && osc ci -n',
                                                          shell=True)
                     except subprocess.CalledProcessError:
                         print(f"Error: can't submit {p}")
@@ -523,7 +517,7 @@ class myCMD(cmd.Cmd):
                 skip = [name]
             else:
                 skip.append(name)
-            with open(blacklistfile, 'w') as f:
+            with blacklistfile.open('w') as f:
                 json.dump(skip, f, indent=4, sort_keys=True)
 
     def do_whitelist(self, arg):
@@ -543,7 +537,7 @@ class myCMD(cmd.Cmd):
                 white = [name]
             else:
                 white.append(name)
-            with open(whitelistfile, 'w') as f:
+            with whitelistfile.open('w') as f:
                 json.dump(white, f, indent=4, sort_keys=True)
 
     def do_depend(self, arg):
@@ -587,7 +581,7 @@ class myCMD(cmd.Cmd):
                 version = version.strip()
                 skip[name] = version
                 print(f"Added {name} {version} to ignore list.")
-                with open(skipfile, 'w') as f:
+                with skipfile.open('w') as f:
                     json.dump(skip, f, indent=4, sort_keys=True)
             except:
                 print("you need to supply a package name and a version number,"
@@ -602,7 +596,7 @@ class myCMD(cmd.Cmd):
                 result = skip.pop(p, None)
                 if result:
                     print(f"removed {p} from ignore list")
-            with open(skipfile, 'w') as f:
+            with skipfile.open('w') as f:
                 json.dump(skip, f, indent=4, sort_keys=True)
         except:
             print("you need to supply a package name or list of package names.")
@@ -633,9 +627,9 @@ class myCMD(cmd.Cmd):
         logs = get_logs()
         packages = []
         if arg == "":
-            packages = os.listdir(myCMD.dir)
+            packages = list(myCMD.dir.iterdir())
             packages = [p for p in packages
-                        if os.path.isdir(os.path.join(myCMD.dir, p))
+                        if (myCMD.dir/ p).is_dir()
                         and p != ".osc"]
         elif arg == "all":
             packages = [p for p in logs]
@@ -659,16 +653,16 @@ class myCMD(cmd.Cmd):
 
         """
         try:
-            output = subprocess.check_output(['osc', 'list', os.path.basename(myCMD.dir)])
+            output = subprocess.check_output(['osc', 'list', myCMD.dir.name])
             existing = output.decode('utf8').split('\n')
         except:
             # if no packages the home-branch on osc than the command will fail
             # in this case we can remove all
             existing = []
 
-        packages = os.listdir(myCMD.dir)
+        packages = list(myCMD.dir.iterdir())
         packages = [p for p in packages
-                    if os.path.isdir(os.path.join(dlp3_branch_path, p))
+                    if (dlp3_branch_path / p).is_dir()
                     and p != ".osc"
                     and p not in existing]
 
@@ -682,7 +676,7 @@ class myCMD(cmd.Cmd):
         print("―"*27)
 
         for p in packages:
-            print("rm -rf", os.path.join(dlp3_branch_path, p))
+            print("rm -rf", (dlp3_branch_path / p))
             if p in self.packages:
                 self.packages.remove(p)
             if p in self.good_packages:
@@ -717,7 +711,7 @@ class myCMD(cmd.Cmd):
 
     def check_package(self, p):
         cmd_dlp = f'osc results devel:languages:python{subproject_path} {p}'
-        cmd_update = 'cd {} && osc results'.format(os.path.join(myCMD.dir, p))
+        cmd_update = f'cd {myCMD.dir/ p} && osc results'
 
         skip_status = defaultdict(lambda: defaultdict(list))
         dlp_status = {'good': 0, 'bad': 0, 'building': 0, 'pending': 0, 'broken': 0}
@@ -984,8 +978,7 @@ class myCMD(cmd.Cmd):
         if arg != '':
             packages = arg.split()
         else:
-            packages = glob.glob(os.path.join(dlp3_path, "python*"))
-            packages = [os.path.basename(p) for p in packages]
+            packages = [p.name for p in dlp3_path.glob("python*")]
 
         # skip pending SR
         if not self.pending_requests:
@@ -996,12 +989,10 @@ class myCMD(cmd.Cmd):
 
         # there are too many packages in dlp, have an option to skip patterns
         blacklist = get_blacklist()
-        for black in blacklist:
-            packages = [p for p in packages if black not in p]
+        packages = [p for p in packages if p not in blacklist]
 
         # packages I'm already preparing an update for
-        PENDING = [i.split("/")[-1] for i in
-                   glob.glob(dlp3_branch_path+"/*")]
+        PENDING = [i.name for i in dlp3_branch_path.glob("*") if not i.name.startswith(".")]
 
         self.dev_packages = []
 
@@ -1010,11 +1001,11 @@ class myCMD(cmd.Cmd):
         for p in packages:
             path = dlp3_branch_path if p in PENDING else dlp3_path
             try:
-                s = glob.glob("{}/*spec".format(os.path.join(path, p)))
-                s = [p for p in s if not p.endswith('-doc.spec')][0]
-                p = glob.glob("{}/*patch".format(os.path.join(path, p)))
+                s = list((path / p).glob("*spec"))
+                s = [x for x in s if not x.name.endswith('-doc.spec')][0]
+                ptch = list((path / p).glob("*patch"))
                 specfiles.append(s)
-                patchfiles.append(p)
+                patchfiles.append(ptch)
             except:
                 print("Error with package", path, p)
                 print("  perhaps this has been removed from dlp?")
@@ -1033,7 +1024,7 @@ class myCMD(cmd.Cmd):
             if s is None:
                 name_version.append([None, None, None, None])
                 continue
-            with open(s) as f:
+            with s.open() as f:
                 singlespec = False
                 for l in f:
                     if not version and l.startswith("Version:"):
@@ -1108,8 +1099,7 @@ class myCMD(cmd.Cmd):
         whiteout = []
         dependout = []
         self.need_update = {}
-        for d, pp, patch in sorted(zip(data, packages, patchfiles), key=lambda x: x[1]):
-            p = os.path.basename(pp)
+        for d, p, patch in sorted(zip(data, packages, patchfiles), key=lambda x: x[1]):
             old = d[0]
             new = d[1]
             if old is None:
@@ -1146,12 +1136,13 @@ class myCMD(cmd.Cmd):
                     result = skip.pop(p, None)
                     if result:
                         extra = " (removed from ignore list)"
-                        with open(skipfile, 'w') as f:
+                        with skipfile.open('w') as f:
                             json.dump(skip, f, indent=4, sort_keys=True)
                 else:
                     continue
             if p in PENDING:
                 extra = " (already branched)"
+
             if old != new and new is not None and old == natsort.natsorted([old, new])[0]:
                 need += 1
                 for i, c in enumerate(old):
@@ -1198,20 +1189,20 @@ class myCMD(cmd.Cmd):
             print("")
         print("checking for outdated packages in branch")
         for p in PENDING:
-            s1 = glob.glob("{}/*spec".format(os.path.join(dlp3_branch_path, p)))
+            s1 = list((dlp3_branch_path/ p).glob("*spec"))
             if s1:
                 s1 = s1[0]
             else:
                 print("Can't find spec file for package", p, '...skipping')
                 continue
-            with open(s1) as f:
+            with s1.open() as f:
                 for l in f:
                     if l.startswith("Version"):
                         version1 = l.split(":")[1].strip()
                         break
             try:
-                s2 = glob.glob("{}/*spec".format(os.path.join(dlp3_path, p)))[0]
-                with open(s2) as f:
+                s2 = list((dlp3_path / p).glob("*spec"))[0]
+                with s2.open() as f:
                     for l in f:
                         if l.startswith("Version"):
                             version2 = l.split(":")[1].strip()
@@ -1278,15 +1269,13 @@ class myCMD(cmd.Cmd):
         try:
             r = requests.get(url, verify=True)
             # use absolut url to make it thread-safe
-            with open(os.path.join(dlp3_branch_path, f'python-{name}', tarball), 'wb') as f:
+            with (dlp3_branch_path/ f'python-{name}'/ tarball).open('wb') as f:
                 f.write(r.content)
             print("download successful")
         except:
             print("couldn't download package; url=", url)
 
-        newspecfile = os.path.join(dlp3_branch_path,
-                                   f'python-{name}',
-                                   f'python-{name}.spec')
+        newspecfile = dlp3_branch_path / f'python-{name}' / f'python-{name}.spec'
         with open(newspecfile, 'w') as f:
             f.write('#\n')
             f.write(f'# spec file for package python-{name}\n')
@@ -1354,21 +1343,21 @@ class myCMD(cmd.Cmd):
 
     def save(self, arg: str):
         """Save current packages, so that we can restart the program later."""
-        with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json'), 'w') as f:
+        with (Path('~/.config/dlp3/').expanduser() / 'current.json').open('w') as f:
             json.dump(self.packages+self.good_packages+self.bad_packages, f, indent=4, sort_keys=True)
             if arg != 'silent':
                 print("Saved package list for next run. Use 'load' to read the list back")
 
     def load(self, arg):
         """Load last list of packages."""
-        with open(os.path.join(os.path.expanduser('~/.config/dlp3/'), 'current.json')) as f:
+        with (Path('~/.config/dlp3/').expanduser() / 'current.json').open() as f:
             c = "".join(f.readlines())
             if c:
                 self.packages = json.loads(c)
             if arg != 'silent':
                 print("Loaded package list")
 
-            packs = os.listdir(myCMD.dir)
+            packs = list(myCMD.dir.iterdir())
             for p in self.packages:
                 if p not in packs:
                     print("Package {} doesn't exist anymore... remove it from list.")
