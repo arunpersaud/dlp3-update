@@ -324,10 +324,10 @@ def auto_complete_package_names(text: str, line: str) -> List[str]:
         lastword = lastword[:-len(text)]
     # skip the beginning if we already have it on the line
     l = len(lastword)
-    packages = [p[l:] for p in myCMD.dir.iterdir()
-                if (dlp3_branch_path/ p).is_dir()
+    packages = [str(p)[l:] for p in myCMD.dir.iterdir()
+                if (dlp3_branch_path / p).is_dir()
                 and p != ".osc"
-                and p.startswith(lastword+text)]
+                and str(p).startswith(lastword+text)]
     return packages
 
 
@@ -586,8 +586,8 @@ class myCMD(cmd.Cmd):
         packages = list(myCMD.dir.iterdir())
         packages = [p for p in packages
                     if (dlp3_branch_path / p).is_dir()
-                    and p != ".osc"
-                    and p not in existing]
+                    and p.name != ".osc"
+                    and p.name not in existing]
 
         if not packages:
             print("Nothing to clean up")
@@ -1207,7 +1207,7 @@ class myCMD(cmd.Cmd):
 
     def load(self, arg):
         """Load last list of packages."""
-        filename = Path('~/.config/dlp3/').expanduser() / 'current-{subproject}.json'
+        filename = Path('~/.config/dlp3/').expanduser() / f'current-{subproject}.json'
         if not filename.is_file():
             print('No saved list of packages')
             return
