@@ -223,10 +223,10 @@ def my_update(package, d):
 
     old = d[0]
     new = d[1]
-
+    url = d[3]
     specfile = d[4]
 
-    if dlp3_branch_path in specfile:
+    if str(dlp3_branch_path) in str(specfile):
         print("updating already branched package")
         os.system(f"cd {dlp3_branch_path/ package} && osc up")
     else:
@@ -241,7 +241,7 @@ def my_update(package, d):
 
     # download new source
     print("downloading")
-    url = d[3].replace("%{version}", new)
+    url = url.replace("%{version}", new)
     try:
         r = requests.get(url, verify=True)
         # use absolut url to make it thread-safe
@@ -255,14 +255,14 @@ def my_update(package, d):
     # add new package, remove old one
     newpackage = url.split("/")[-1]
 
-    oldpackage = d[3].replace("%{version}", old).split("/")[-1]
+    oldpackage = url.replace("%{version}", old).split("/")[-1]
     print(oldpackage, "=>", newpackage)
     os.system(f"cd {branchdir} && rm {oldpackage}")
     os.system(f"cd {branchdir} && osc addremove")
 
     # update version in spec file
     changelog = ""
-    spec = d[4].split("/")[-1]
+    spec = specfile.name
     files = [spec, spec.replace(".spec", "-doc.spec")]
     for file in files:
         try:
@@ -410,7 +410,7 @@ class myCMD(cmd.Cmd):
                     self.packages.append(p)
                     output = subprocess.check_output(f'cd {dlp3_branch_path/ p} && spec-cleaner -i {p}.spec',
                                                      shell=True)
-                    if (myCMD.dir/ p / p+'-doc.spec').is_file():
+                    if (myCMD.dir/ p / f'{p}-doc.spec').is_file():
                         output = subprocess.check_output(f'cd {dlp3_branch_path/ p} && spec-cleaner -i {p}-doc.spec',
                                                          shell=True)
                     try:
