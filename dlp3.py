@@ -1214,14 +1214,16 @@ class myCMD(cmd.Cmd):
 
         with filename.open() as f:
             self.packages = json.load(f)
-            if arg != 'silent':
-                print("Loaded package list")
 
-            packs = list(myCMD.dir.iterdir())
-            for p in self.packages:
-                if p not in packs:
-                    print(f"Package {p} doesn't exist anymore... removing it from list.")
-                    self.packages.remove(p)
+        if arg != 'silent':
+            print("Loaded package list")
+
+        packs = list(myCMD.dir.iterdir())
+        packs = [p.name for p in packs]
+        for p in self.packages:
+            if p not in packs:
+                print(f"Package {p} doesn't exist anymore... removing it from list.")
+                self.packages.remove(p)
 
 
 A = myCMD()
