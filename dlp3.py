@@ -241,21 +241,23 @@ def my_update(package, d):
 
     # download new source
     print("downloading")
+    oldpackage = url.replace("%{version}", old).split("/")[-1]
+
     url = url.replace("%{version}", new)
+    # add new package, remove old one
+    newpackage = url.split("/")[-1]
+
     try:
         r = requests.get(url, verify=True)
         # use absolut url to make it thread-safe
-        with (branchdir/ url.split("/")[-1]).open('wb') as f:
+        with (branchdir / newpackage).open('wb') as f:
             f.write(r.content)
         print("download successful")
     except:
         print(f"couldn't download {package} at url {url}")
         return
 
-    # add new package, remove old one
-    newpackage = url.split("/")[-1]
 
-    oldpackage = url.replace("%{version}", old).split("/")[-1]
     print(oldpackage, "=>", newpackage)
     os.system(f"cd {branchdir} && rm {oldpackage}")
     os.system(f"cd {branchdir} && osc addremove")
