@@ -2,7 +2,7 @@ from collections import UserDict, UserList
 import json
 
 
-class JsonBase():
+class JsonBase:
     def load(self):
         try:
             with self.filename.open() as f:
@@ -12,7 +12,7 @@ class JsonBase():
         return self.data
 
     def save(self):
-        with self.filename.open('w') as f:
+        with self.filename.open("w") as f:
             json.dump(self.data, f, indent=4, sort_keys=True)
 
 
@@ -37,4 +37,3 @@ class JsonList(UserList, JsonBase):
             print(f"Currently {self.name}ing the following packages")
             for p in self.data:
                 print(f"  {p}")
-
