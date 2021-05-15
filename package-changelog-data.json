@@ -493,7 +493,7 @@
     "python-tables": "http://www.pytables.org/release_notes.html",
     "python-tabulate": "https://github.com/astanin/python-tabulate/blob/master/CHANGELOG",
     "python-tempora": "https://github.com/jaraco/tempora/blob/master/CHANGES.rst",
-    "python-terminado": "https://github.com/takluyver/terminado/blob/master/doc/releasenotes.rst",
+    "python-terminado": "https://github.com/jupyter/terminado/blob/master/CHANGELOG.md",
     "python-testpath": "git clone https://github.com/jupyter/testpath.git",
     "python-testresources": "see tar ball",
     "python-testscenarios": "http://bazaar.launchpad.net/~testing-cabal/testscenarios/master/view/head:/NEWS",
