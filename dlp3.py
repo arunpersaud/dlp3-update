@@ -689,10 +689,6 @@ class myCMD(cmd.Cmd):
                                 if system in skip_status[p][distro]:
                                     continue
 
-                    # no python3, so we get many errors here
-                    if distro == "SLE_11_SP4" and status == "unresolvable":
-                        continue
-
                     # unify output a bit
                     if status.endswith("*"):
                         status = status[:-1]
@@ -764,7 +760,7 @@ class myCMD(cmd.Cmd):
 
         if self.longestname > 0:
             print(
-                "{:^{length}}   good     bad   building  pending".format(
+                "{:^{length}}   good     bad   building  pending   broken".format(
                     "name", length=self.longestname + 2
                 )
             )
@@ -794,46 +790,51 @@ class myCMD(cmd.Cmd):
                 good_out += colored(update_status["good"], "green")
             else:
                 good_out += str(update_status["good"])
-            if update_status["broken"] == 0:
-                if dlp_status["good"] < 0:
-                    print(
-                        "{:<{length}}    {: >2}(--)   {}(--)   {: >2}(--)    {: >2}(--)    {link}".format(
-                            p,
-                            update_status["good"],
-                            update_status["bad"],
-                            update_status["building"],
-                            update_status["pending"],
-                            length=self.longestname,
-                            link=link,
-                        )
-                    )
-                else:
-                    print(
-                        "{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {: >2}({: >2})    {link}".format(
-                            p,
-                            update_status["good"],
-                            dlp_status["good"],
-                            bad_out,
-                            dlp_status["bad"],
-                            update_status["building"],
-                            dlp_status["building"],
-                            update_status["pending"],
-                            dlp_status["pending"],
-                            length=self.longestname,
-                            link=link,
-                        )
-                    )
 
+            if update_status["broken"] < 10 and update_status["broken"] > 0:
+                broken_out = " "
+            else:
+                broken_out = ""
+            if update_status["broken"] > dlp_status["broken"]:
+                broken_out += colored(update_status["broken"], "green")
+            else:
+                broken_out += str(update_status["broken"])
+
+            if dlp_status["good"] < 0:
+                print(
+                    "{:<{length}}    {: >2}(--)   {}(--)   {: >2}(--)    {: >2}(--) {: >2}(--)    {link}".format(
+                        p,
+                        update_status["good"],
+                        update_status["bad"],
+                        update_status["building"],
+                        update_status["pending"],
+                        update_status["broken"],
+                        length=self.longestname,
+                        link=link,
+                    )
+                )
             else:
                 print(
-                    "{:<{length}}     broken                              {link}".format(
-                        p, length=self.longestname, link=link
+                    "{:<{length}}    {: >2}({: >2})  {}({: >2})   {: >2}({: >2})    {: >2}({: >2})   {: >2}({: >2})    {link}".format(
+                        p,
+                        update_status["good"],
+                        dlp_status["good"],
+                        bad_out,
+                        dlp_status["bad"],
+                        update_status["building"],
+                        dlp_status["building"],
+                        update_status["pending"],
+                        dlp_status["pending"],
+                        update_status["broken"],
+                        dlp_status["broken"],
+                        length=self.longestname,
+                        link=link,
                     )
                 )
 
             self.good_total += update_status["good"]
             self.bad_total += update_status["bad"]
-        print("―" * (self.longestname + 37))
+        print("―" * (self.longestname + 47))
         print(
             "{:<{length}}    {: >+2}      {: >+2}".format(
                 "ΔΣ",
