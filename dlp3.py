@@ -149,22 +149,6 @@ def get_whitelist_depends():
                                 depend.add(name)
                     if "%description" in l:
                         break
-    # remove python2 packages
-    for p in [
-        "python-backports.shutil_get_terminal_size",
-        "python-configparser",
-        "python-enum34",
-        "python-funcsigs",
-        "python-functools32",
-        "python-ipaddress",
-        "python-ordereddict",
-        "python-pathlib2",
-        "python-rpm-macros",
-        "python-singledispatch",
-        "python-subprocess32",
-    ]:
-        if p in depend:
-            depend.remove(p)
 
     return depend
 
