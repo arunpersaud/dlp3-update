@@ -191,18 +191,31 @@ def my_submit(package: str):
     return worked
 
 
-def my_cleanup(package: str):
-    print("updating dlp3 checkout for", package)
+def my_cleanup(package: Path) -> None:
+    print("updating dlp3 checkout for", package.name)
     try:
         output = subprocess.check_output(
-            f"cd {dlp3_path / package} && osc up", stderr=subprocess.DEVNULL, shell=True
+            f"cd {package} && osc up", stderr=subprocess.DEVNULL, shell=True
         )
     except:
         # package didn't exist yet, create a new checkout
         output = subprocess.check_output(
-            f"cd {dlp3_path / package} && osc co {dlp3_path / package}", shell=True
+            f"cd {package} && osc co {package.name}", shell=True
         )
     print(output.decode("utf8"))
+
+
+def file_search_and_replace(filename: Path, search: str, replace: str) -> None:
+    """Search and replace inside a text file.
+
+    Used, for example, to fix errors from spec-cleaner
+    """
+    if not filename.is_file():
+        return
+
+    text = filename.read_text()
+    text.replace(search, replace)
+    filename.write_text(text)
 
 
 def my_update(package, d):
@@ -362,8 +375,9 @@ class myCMD(cmd.Cmd):
     def do_add(self, arg):
         """Start monitoring the build status for the given package(s)."""
         if arg == "all":
-            packages = list(myCMD.dir.iterdir())
-            packages = [p for p in packages if p.is_dir() and p.name != ".osc"]
+            packages = [
+                p.name for p in myCMD.dir.iterdir() if p.is_dir() and p.name != ".osc"
+            ]
         else:
             packages = arg.split()
         for p in packages:
@@ -404,15 +418,19 @@ class myCMD(cmd.Cmd):
                     return
                 if p not in self.packages:
                     self.packages.append(p)
-                    output = subprocess.check_output(
-                        f"cd {dlp3_branch_path/ p} && spec-cleaner -i {p}.spec",
-                        shell=True,
-                    )
-                    if (myCMD.dir / p / f"{p}-doc.spec").is_file():
-                        output = subprocess.check_output(
-                            f"cd {dlp3_branch_path/ p} && spec-cleaner -i {p}-doc.spec",
-                            shell=True,
-                        )
+                    for specname in [f"{p}.spec", f"{p}-doc.spec"]:
+                        specpath = myCMD.dir / p / specname
+                        if specpath.is_file():
+                            output = subprocess.check_output(
+                                f"cd {dlp3_branch_path/ p} && spec-cleaner -i {specname}",
+                                shell=True,
+                            )
+                            # fix some problems with spec-cleaner
+                            file_search_and_replace(
+                                specpath,
+                                search="%{python_libalternatives_reset_alternative}",
+                                replace="%python_libalternatives_reset_alternative",
+                            )
                     try:
                         output = subprocess.check_output(
                             f"cd {dlp3_branch_path/ p} && osc ci -n", shell=True
@@ -555,8 +573,9 @@ class myCMD(cmd.Cmd):
         logs = logfile.load()
         packages = []
         if arg == "":
-            packages = list(myCMD.dir.iterdir())
-            packages = [p for p in packages if p.is_dir() and p.name != ".osc"]
+            packages = [
+                p.name for p in myCMD.dir.iterdir() if p.is_dir() and p.name != ".osc"
+            ]
         elif arg == "all":
             packages = [p for p in logs]
         else:
@@ -586,10 +605,9 @@ class myCMD(cmd.Cmd):
             # in this case we can remove all
             existing = []
 
-        packages = list(myCMD.dir.iterdir())
         packages = [
             p
-            for p in packages
+            for p in myCMD.dir.iterdir()
             if p.is_dir() and p.name != ".osc" and p.name not in existing
         ]
 
@@ -603,13 +621,11 @@ class myCMD(cmd.Cmd):
         print("―" * 27)
 
         for p in packages:
-            print("rm -rf", (dlp3_branch_path / p))
-            if p in self.packages:
-                self.packages.remove(p)
-            if p in self.good_packages:
-                self.good_packages.remove(p)
-            if p in self.bad_packages:
-                self.bad_packages.remove(p)
+            name = p.name
+            print("rm -rf", p)
+            for package_list in [self.packages, self.good_packages, self.bad_packages]:
+                if name in package_list:
+                    package_list.remove(name)
 
         self.save("silent")
 
@@ -1316,8 +1332,7 @@ class myCMD(cmd.Cmd):
         if arg != "silent":
             print("Loaded package list")
 
-        packs = list(myCMD.dir.iterdir())
-        packs = [p.name for p in packs]
+        packs = [p.name for p in myCMD.dir.iterdir()]
         for p in self.packages:
             if p not in packs:
                 print(f"Package {p} doesn't exist anymore... removing it from list.")

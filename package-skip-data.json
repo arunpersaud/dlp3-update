@@ -11,6 +11,7 @@
     "python-cffi-doc": "-",
     "python-greenlet-doc": "-",
     "python-irc": "-",
+    "python-jupyter-server": "1.13.5",
     "python-jupyter_client-doc": "-",
     "python-jupyter_console-doc": "-",
     "python-jupyter_core-doc": "-",
