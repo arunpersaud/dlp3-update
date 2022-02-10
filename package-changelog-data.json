@@ -525,7 +525,7 @@
     "python-veusz": "http://home.gna.org/veusz/releasenotes/",
     "python-vim-vint": "https://github.com/Kuniwak/vint/releases",
     "python-vine": "see Changelog in tar-ball",
-    "python-virtualenv": "https://virtualenv.pypa.io/en/latest/changes.html",
+    "python-virtualenv": "https://virtualenv.pypa.io/en/latest/changelog.html",
     "python-virtualenvwrapper": "http://virtualenvwrapper.readthedocs.io/en/latest/history.html",
     "python-vobject": "http://eventable.github.io/vobject/",
     "python-vulture": "https://pypi.python.org/pypi/vulture",
