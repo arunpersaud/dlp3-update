@@ -319,24 +319,21 @@ def my_update(package, d):
 
 
 def auto_complete_package_names(text: str, line: str) -> List[str]:
-    """autocomplete package names
+    """Autocomplete package names.
 
     readline likes to split things up when it hits a '-'
-    so we need to check the last word on the line and
+    so we need to check the last word on the line
     since 'text' could just be the text after a '-'.
     """
-
     lastword = line.split()[-1]
     if text:
         lastword = lastword[: -len(text)]
     # skip the beginning if we already have it on the line
     l = len(lastword)
     packages = [
-        str(p)[l:]
+        str(p.name)[l:]
         for p in myCMD.dir.iterdir()
-        if (dlp3_branch_path / p).is_dir()
-        and p != ".osc"
-        and str(p).startswith(lastword + text)
+        if p.is_dir() and p.name != ".osc" and str(p.name).startswith(lastword + text)
     ]
     return packages
 
@@ -381,8 +378,8 @@ class myCMD(cmd.Cmd):
     def do_add(self, arg):
         """Start monitoring the build status for the given package(s)."""
         if arg == "all":
-            packages = lists(myCMD.dir.iterdir())
-            packages = [p for p in packages if (myCMD.dir / p).is_dir() and p != ".osc"]
+            packages = list(myCMD.dir.iterdir())
+            packages = [p for p in packages if p.is_dir() and p.name != ".osc"]
         else:
             packages = arg.split()
         for p in packages:
@@ -575,7 +572,7 @@ class myCMD(cmd.Cmd):
         packages = []
         if arg == "":
             packages = list(myCMD.dir.iterdir())
-            packages = [p for p in packages if (myCMD.dir / p).is_dir() and p != ".osc"]
+            packages = [p for p in packages if p.is_dir() and p.name != ".osc"]
         elif arg == "all":
             packages = [p for p in logs]
         else:
@@ -609,9 +606,7 @@ class myCMD(cmd.Cmd):
         packages = [
             p
             for p in packages
-            if (dlp3_branch_path / p).is_dir()
-            and p.name != ".osc"
-            and p.name not in existing
+            if p.is_dir() and p.name != ".osc" and p.name not in existing
         ]
 
         if not packages:
