@@ -214,7 +214,7 @@ def file_search_and_replace(filename: Path, search: str, replace: str) -> None:
         return
 
     text = filename.read_text()
-    text.replace(search, replace)
+    text = text.replace(search, replace)
     filename.write_text(text)
 
 
