@@ -193,14 +193,17 @@ def my_submit(package: str):
 
 def my_cleanup(package: Path) -> None:
     print("updating dlp3 checkout for", package.name)
+    orig = dlp3_path / package.name
     try:
         output = subprocess.check_output(
-            f"cd {package} && osc up", stderr=subprocess.DEVNULL, shell=True
+            f"cd {orig} && osc up",
+            stderr=subprocess.DEVNULL,
+            shell=True,
         )
     except:
         # package didn't exist yet, create a new checkout
         output = subprocess.check_output(
-            f"cd {package} && osc co {package.name}", shell=True
+            f"cd {orig} && osc co {package.name}", shell=True
         )
     print(output.decode("utf8"))
 
