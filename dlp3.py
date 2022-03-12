@@ -434,6 +434,11 @@ class myCMD(cmd.Cmd):
                                 search="%{python_libalternatives_reset_alternative}",
                                 replace="%python_libalternatives_reset_alternative",
                             )
+                            file_search_and_replace(
+                                specpath,
+                                search="%{python}_base",
+                                replace="%python_base",
+                            )
                     try:
                         output = subprocess.check_output(
                             f"cd {dlp3_branch_path/ p} && osc ci -n", shell=True
