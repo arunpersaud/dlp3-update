@@ -1071,9 +1071,7 @@ class myCMD(cmd.Cmd):
                     except json.decoder.JSONDecodeError:
                         pass
 
-        loop = asyncio.get_event_loop()
-        future = asyncio.ensure_future(run())
-        loop.run_until_complete(future)
+        asyncio.run(run())
 
         # sort list in same order as in name_version
         results_list = [
