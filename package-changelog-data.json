@@ -310,7 +310,7 @@
     "python-metakernel": "https://github.com/Calysto/metakernel/blob/master/CHANGELOG.md",
     "python-mistune": "https://github.com/lepture/mistune/blob/master/CHANGES.rst",
     "python-mock": "tar-ball",
-    "python-more-itertools": "https://pypi.python.org/pypi/more-itertools",
+    "python-more-itertools": "https://github.com/more-itertools/more-itertools/blob/master/docs/versions.rst",
     "python-moretools": "hg clone https://bitbucket.org/userzimmermann/python-moretools",
     "python-moto": "https://github.com/spulec/moto/blob/master/CHANGELOG.md",
     "python-mpi4py": "https://bitbucket.org/mpi4py/mpi4py/src",
