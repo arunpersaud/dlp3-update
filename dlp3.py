@@ -436,8 +436,8 @@ class myCMD(cmd.Cmd):
                             )
                             file_search_and_replace(
                                 specpath,
-                                search="%{python}_base",
-                                replace="%python_base",
+                                search="%{python}-base",
+                                replace="%python-base",
                             )
                     try:
                         output = subprocess.check_output(
