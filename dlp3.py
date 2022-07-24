@@ -1044,7 +1044,8 @@ class myCMD(cmd.Cmd):
         async def fetch(url, session):
             async with session.get(url) as response:
                 return (
-                    await response.read()
+                    await response.read(),
+                    url,
                 )  # response.json gave errors for some packages
 
         results = {}
@@ -1061,9 +1062,13 @@ class myCMD(cmd.Cmd):
                         tasks.append(f)
 
                 responses = await asyncio.gather(*tasks)
-                for r in responses:
+                for r, u in responses:
                     try:
                         r = json.loads(r)
+                        if "message" in r:
+                            if r["message"] == "Not Found":
+                                print("Could not get response for", u)
+                                continue
                         package = r["info"]["name"]
                         results[package] = natsort.natsorted(
                             list(r["releases"].keys())
