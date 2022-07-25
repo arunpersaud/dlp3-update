@@ -1070,9 +1070,16 @@ class myCMD(cmd.Cmd):
                                 print("Could not get response for", u)
                                 continue
                         package = r["info"]["name"]
-                        results[package] = natsort.natsorted(
-                            list(r["releases"].keys())
-                        )[-1]
+                        package_releases = list(r["releases"].keys())
+                        # sort out alpha releases, etc.
+                        package_releases = [p for p in package_releases if "a" not in p]
+                        package_releases = [p for p in package_releases if "b" not in p]
+                        package_releases = [p for p in package_releases if "c" not in p]
+                        package_releases = [
+                            p for p in package_releases if "dev" not in p
+                        ]
+                        # get latest release
+                        results[package] = natsort.natsorted(package_releases)[-1]
                     except json.decoder.JSONDecodeError:
                         pass
 
