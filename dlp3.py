@@ -1079,7 +1079,8 @@ class myCMD(cmd.Cmd):
                             p for p in package_releases if "dev" not in p
                         ]
                         # get latest release
-                        results[package] = natsort.natsorted(package_releases)[-1]
+                        if len(package_releases):
+                            results[package] = natsort.natsorted(package_releases)[-1]
                     except json.decoder.JSONDecodeError:
                         pass
 
