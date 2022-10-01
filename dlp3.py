@@ -1012,15 +1012,23 @@ class myCMD(cmd.Cmd):
                 continue
             with s.open() as f:
                 singlespec = False
+                variables = {}
                 for l in f:
+                    if l.startswith("%define"):
+                        _, var_name, var_value = l.split()
+                        variables[var_name] = var_value
+                    for key, value in variables.items():
+                        if f"%{key}" in l:
+                            l = l.replace(f"%{key}", value)
+                        if f"%{{{key}}}" in l:
+                            l = l.replace(f"%{{{key}}}", value)
                     if not version and l.startswith("Version:"):
                         version = l.split(":")[1].strip()
                     if not url and l.startswith("Source") and "version" in l:
                         url = l.split(":", maxsplit=1)[1].strip()
                         parts = l.split("/")
                         if len(parts) > 6 and (
-                            parts[2] == "pypi.python.org"
-                            or parts[2] == "files.pythonhosted.org"
+                            parts[2] in ["pypi.python.org", "files.pythonhosted.org"]
                         ):
                             name = parts[6]
                     if not singlespec and "python_module" in l:
