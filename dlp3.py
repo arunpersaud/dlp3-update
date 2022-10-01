@@ -1015,8 +1015,10 @@ class myCMD(cmd.Cmd):
                 variables = {}
                 for l in f:
                     if l.startswith("%define"):
-                        _, var_name, var_value = l.split()
-                        variables[var_name] = var_value
+                        elements = l.split()
+                        if len(elements) == 3:
+                            _, var_name, var_value = elements
+                            variables[var_name] = var_value
                     for key, value in variables.items():
                         if f"%{key}" in l:
                             l = l.replace(f"%{key}", value)
