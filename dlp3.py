@@ -880,7 +880,7 @@ class myCMD(cmd.Cmd):
         for line in output.split("\n\n"):
             if "add_role" in line:
                 continue
-            if "This is a humble request" in line:
+            if "This is a friendly request" in line:
                 continue
             if "State:new" in line:
                 tmp = line.split()
