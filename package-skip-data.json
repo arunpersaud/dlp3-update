@@ -5,7 +5,6 @@
     "python-WebTest-doc": "-",
     "python-Werkzeug-doc": "-",
     "python-amqp-doc": "-",
-    "python-apsw": "3.9.2-r1",
     "python-beautifulsoup4-doc": "-",
     "python-boto-doc": "-",
     "python-cffi-doc": "-",
