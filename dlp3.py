@@ -887,8 +887,15 @@ class myCMD(cmd.Cmd):
                 nr = tmp[0]
                 author = tmp[2][3:]  # remove 'By:'
                 fromrepo = tmp[5]
-                fromrepo, package = fromrepo.split("/")
-                package = package.split("@")[0]
+                if "python" not in fromrepo.lower():
+                    continue
+                try:
+                    fromrepo, package = fromrepo.split("/")
+                    package = package.split("@")[0]
+                except ValueError:
+                    print("Cannot parse pendings SR")
+                    print(line)
+                    continue
                 torepo = tmp[7]
                 if torepo == "devel:languages:python":
                     print(f"{nr} {package:<25} {author:<20} {fromrepo}")
@@ -915,11 +922,16 @@ class myCMD(cmd.Cmd):
                 tmp = line.split()
                 nr = tmp[0]
                 author = tmp[2][3:]  # remove 'By:'
-                fromrepo = tmp[5]
-                fromrepo, package = fromrepo.split("/")
-                package = package.split("@")[0]
-                torepo = tmp[7]
-                if torepo == "devel:languages:python":
+                fromrepo = tmp[8]
+                try:
+                    fromrepo, package = fromrepo.split("/")
+                    package = package.split("@")[0]
+                except ValueError:
+                    print("Cannot parse pendings SR")
+                    print(line)
+                    continue
+                torepo = tmp[10]
+                if torepo.startswith("devel:languages:python"):
                     print(f"{nr} {package:<25} {author:<20} {fromrepo}")
                     self.pending_requests.append(package)
 
